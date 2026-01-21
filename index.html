@@ -1,0 +1,3378 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>PDF Manager v10 – PDF.js + Tesseract.js + Notes/Links</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js">
+/* ===== UI bindings fix (v17.9) ===== */
+function bindSlotSelectionButtons(tool){
+  if(!tool || !tool.el) return;
+
+  // Ensure selectedSlots exists
+  if(!tool.selectedSlots) tool.selectedSlots = new Set();
+
+  const byId = (id)=>document.getElementById(id);
+
+  const btnAll = byId("btnSelAllSlots");
+  const btnNone = byId("btnDeselAllSlots");
+  const btnPlusN = byId("btnSelN");
+  const btnMinusN = byId("btnDeselN");
+  const inputN = byId("inputSelN");
+
+  const nVal = ()=>{
+    const n=parseInt((inputN && inputN.value) ? inputN.value : "1", 10);
+    return Math.max(1, isFinite(n)?n:1);
+  };
+
+  btnAll && (btnAll.onclick=()=>{ tool.selectAllSlots ? tool.selectAllSlots() : (tool.selectedSlots=new Set(Array.from({length:tool.slots},(_,i)=>i)), tool.render()); });
+  btnNone && (btnNone.onclick=()=>{ tool.deselectAllSlots ? tool.deselectAllSlots() : (tool.selectedSlots.clear(), tool.render()); });
+  btnPlusN && (btnPlusN.onclick=()=>{ tool.selectNSlotsFromActive ? tool.selectNSlotsFromActive() : (function(){ const n=nVal(); const start=tool.activeSlot||0; for(let k=0;k<n;k++) tool.selectedSlots.add((start+k)%tool.slots); tool.render(); })(); });
+  btnMinusN && (btnMinusN.onclick=()=>{ tool.deselectNSlotsFromActive ? tool.deselectNSlotsFromActive() : (function(){ const n=nVal(); const start=tool.activeSlot||0; for(let k=0;k<n;k++) tool.selectedSlots.delete((start+k)%tool.slots); tool.render(); })(); });
+
+  // If scope is "selected" and user clicks apply without selection, toast already handled in applySelectedPagesToSlots.
+}
+
+document.addEventListener("DOMContentLoaded", ()=>{
+  // Try to locate the running instance
+  const tool = window.tool || window.pdfTool || window.app || null;
+  if(tool) bindSlotSelectionButtons(tool);
+
+  // If created later, hook a microtask + interval for short time
+  let tries=0;
+  const iv=setInterval(()=>{
+    const t = window.tool || window.pdfTool || window.app || null;
+    if(t){ bindSlotSelectionButtons(t); clearInterval(iv); }
+    tries++; if(tries>50) clearInterval(iv);
+  }, 50);
+});
+
+</script>
+  <!-- Tesseract.js -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js">
+/* ===== UI bindings fix (v17.9) ===== */
+function bindSlotSelectionButtons(tool){
+  if(!tool || !tool.el) return;
+
+  // Ensure selectedSlots exists
+  if(!tool.selectedSlots) tool.selectedSlots = new Set();
+
+  const byId = (id)=>document.getElementById(id);
+
+  const btnAll = byId("btnSelAllSlots");
+  const btnNone = byId("btnDeselAllSlots");
+  const btnPlusN = byId("btnSelN");
+  const btnMinusN = byId("btnDeselN");
+  const inputN = byId("inputSelN");
+
+  const nVal = ()=>{
+    const n=parseInt((inputN && inputN.value) ? inputN.value : "1", 10);
+    return Math.max(1, isFinite(n)?n:1);
+  };
+
+  btnAll && (btnAll.onclick=()=>{ tool.selectAllSlots ? tool.selectAllSlots() : (tool.selectedSlots=new Set(Array.from({length:tool.slots},(_,i)=>i)), tool.render()); });
+  btnNone && (btnNone.onclick=()=>{ tool.deselectAllSlots ? tool.deselectAllSlots() : (tool.selectedSlots.clear(), tool.render()); });
+  btnPlusN && (btnPlusN.onclick=()=>{ tool.selectNSlotsFromActive ? tool.selectNSlotsFromActive() : (function(){ const n=nVal(); const start=tool.activeSlot||0; for(let k=0;k<n;k++) tool.selectedSlots.add((start+k)%tool.slots); tool.render(); })(); });
+  btnMinusN && (btnMinusN.onclick=()=>{ tool.deselectNSlotsFromActive ? tool.deselectNSlotsFromActive() : (function(){ const n=nVal(); const start=tool.activeSlot||0; for(let k=0;k<n;k++) tool.selectedSlots.delete((start+k)%tool.slots); tool.render(); })(); });
+
+  // If scope is "selected" and user clicks apply without selection, toast already handled in applySelectedPagesToSlots.
+}
+
+document.addEventListener("DOMContentLoaded", ()=>{
+  // Try to locate the running instance
+  const tool = window.tool || window.pdfTool || window.app || null;
+  if(tool) bindSlotSelectionButtons(tool);
+
+  // If created later, hook a microtask + interval for short time
+  let tries=0;
+  const iv=setInterval(()=>{
+    const t = window.tool || window.pdfTool || window.app || null;
+    if(t){ bindSlotSelectionButtons(t); clearInterval(iv); }
+    tries++; if(tries>50) clearInterval(iv);
+  }, 50);
+});
+
+</script>
+  <!-- PDF-Lib (édition/export) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js">
+/* ===== UI bindings fix (v17.9) ===== */
+function bindSlotSelectionButtons(tool){
+  if(!tool || !tool.el) return;
+
+  // Ensure selectedSlots exists
+  if(!tool.selectedSlots) tool.selectedSlots = new Set();
+
+  const byId = (id)=>document.getElementById(id);
+
+  const btnAll = byId("btnSelAllSlots");
+  const btnNone = byId("btnDeselAllSlots");
+  const btnPlusN = byId("btnSelN");
+  const btnMinusN = byId("btnDeselN");
+  const inputN = byId("inputSelN");
+
+  const nVal = ()=>{
+    const n=parseInt((inputN && inputN.value) ? inputN.value : "1", 10);
+    return Math.max(1, isFinite(n)?n:1);
+  };
+
+  btnAll && (btnAll.onclick=()=>{ tool.selectAllSlots ? tool.selectAllSlots() : (tool.selectedSlots=new Set(Array.from({length:tool.slots},(_,i)=>i)), tool.render()); });
+  btnNone && (btnNone.onclick=()=>{ tool.deselectAllSlots ? tool.deselectAllSlots() : (tool.selectedSlots.clear(), tool.render()); });
+  btnPlusN && (btnPlusN.onclick=()=>{ tool.selectNSlotsFromActive ? tool.selectNSlotsFromActive() : (function(){ const n=nVal(); const start=tool.activeSlot||0; for(let k=0;k<n;k++) tool.selectedSlots.add((start+k)%tool.slots); tool.render(); })(); });
+  btnMinusN && (btnMinusN.onclick=()=>{ tool.deselectNSlotsFromActive ? tool.deselectNSlotsFromActive() : (function(){ const n=nVal(); const start=tool.activeSlot||0; for(let k=0;k<n;k++) tool.selectedSlots.delete((start+k)%tool.slots); tool.render(); })(); });
+
+  // If scope is "selected" and user clicks apply without selection, toast already handled in applySelectedPagesToSlots.
+}
+
+document.addEventListener("DOMContentLoaded", ()=>{
+  // Try to locate the running instance
+  const tool = window.tool || window.pdfTool || window.app || null;
+  if(tool) bindSlotSelectionButtons(tool);
+
+  // If created later, hook a microtask + interval for short time
+  let tries=0;
+  const iv=setInterval(()=>{
+    const t = window.tool || window.pdfTool || window.app || null;
+    if(t){ bindSlotSelectionButtons(t); clearInterval(iv); }
+    tries++; if(tries>50) clearInterval(iv);
+  }, 50);
+});
+
+</script>
+
+  <style>
+    :root{
+      --bg:#0f1012;
+      --panel:#15171a;
+      --panel2:#1b1e23;
+      --border:#2a2f36;
+      --text:#f1f2f4;
+      --muted:#a5a9b4;
+      --accent:#22c55e;
+      --info:#3b82f6;
+      --danger:#ef4444;
+      --warn:#f59e0b;
+      --shadow:0 10px 28px rgba(0,0,0,.35);
+      --r:10px;
+      --gap:14px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}
+    body.presentation header, body.presentation .tabs, body.presentation .sidebar, body.presentation .viewerTopbar{display:none !important;}
+    body.presentation .main{height:100vh;}
+    body.presentation .content{height:100vh;}
+    body.presentation .viewer{padding:10px;}
+
+    button,input,select,textarea{font:inherit}
+    .app{height:100vh;display:flex;flex-direction:column}
+    header{
+      height:58px;flex:0 0 auto;display:flex;align-items:center;gap:10px;
+      padding:0 14px;background:#0b0c0e;border-bottom:1px solid var(--border)
+    }
+    header .title{font-weight:800;white-space:nowrap}
+    header .grow{flex:1}
+    .btn{
+      border:1px solid var(--border);background:var(--panel2);color:var(--text);
+      padding:7px 10px;border-radius:8px;cursor:pointer;font-size:13px;
+      white-space:nowrap;
+    }
+    .btn.primary{background:var(--accent);color:#052012;border-color:transparent}
+    .btn.info{background:var(--info);border-color:transparent}
+    .btn.danger{background:var(--danger);border-color:transparent}
+    .btn.warn{background:var(--warn);border-color:transparent;color:#201602}
+    .btn:disabled{opacity:.45;cursor:not-allowed}
+    .pill{font-size:12px;color:var(--muted);padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.02)}
+    .tabs{
+      height:46px;flex:0 0 auto;display:flex;align-items:center;gap:6px;
+      padding:0 10px;background:#111216;border-bottom:1px solid var(--border);
+      overflow:auto
+    }
+    .tab{
+      max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+      font-size:13px;padding:7px 10px;border-radius:8px;cursor:pointer;
+      border:1px solid var(--border);background:var(--panel)
+    }
+    .tab.active{border-color:var(--accent);background:rgba(34,197,94,.10)}
+    .main{flex:1;min-height:0;display:flex}
+    .sidebar{
+      width:380px;flex:0 0 auto;overflow:auto;padding:14px;
+      background:var(--panel);border-right:1px solid var(--border)
+    }
+    .sidebar h3{
+      margin:14px 0 8px;font-size:12px;color:var(--muted);
+      text-transform:uppercase;letter-spacing:.06em
+    }
+    .field{margin-bottom:10px}
+    .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+    .field input,.field select{
+      width:100%;background:#0c0d10;color:var(--text);
+      border:1px solid var(--border);border-radius:8px;padding:8px 10px
+    }
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    .row > *{flex:1;min-width:160px}
+    .small{font-size:12px;color:var(--muted)}
+    .hint{font-size:12px;color:var(--muted);line-height:1.35}
+    .sep{height:1px;background:var(--border);margin:12px 0}
+
+    .pagesList{
+      max-height:240px;overflow:auto;border:1px solid var(--border);
+      border-radius:10px;background:#0c0d10;padding:6px
+    }
+    .pageItem{
+      display:flex;align-items:center;gap:8px;padding:6px 6px;border-radius:8px;
+      cursor:pointer
+    }
+    .pageItem:hover{background:rgba(255,255,255,.04)}
+    .pageItem.selected{outline:2px solid rgba(34,197,94,.35);background:rgba(34,197,94,.08)}
+    .pageItem .num{width:64px;color:var(--muted);font-size:12px}
+    .pageItem .meta{flex:1;color:var(--text);font-size:12px}
+    .pageItem input{pointer-events:none}
+
+    .content{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
+    .viewerTopbar{
+      flex:0 0 auto;display:flex;align-items:center;gap:10px;
+      padding:10px 14px;border-bottom:1px solid var(--border);background:#0c0d10
+    }
+    .modeBtns{display:flex;gap:6px}
+    .modeBtn{
+      padding:7px 10px;border-radius:8px;border:1px solid var(--border);
+      background:var(--panel2);cursor:pointer;font-size:13px
+    }
+    .modeBtn.active{border-color:var(--accent);background:rgba(34,197,94,.10)}
+    .viewer{flex:1;min-height:0;overflow:auto;padding:14px}
+    .gridWrap{width:max-content;margin:0 auto;transform-origin: top center;}
+    .grid{
+      display:grid;
+      gap:var(--gap);
+      align-content:start;
+      width:max-content;
+      margin:0 auto;
+    }
+    .slot{
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#0c0d10;
+      box-shadow:var(--shadow);
+      display:flex;
+      flex-direction:column;
+      outline:2px solid transparent;
+      user-select:none;
+    }
+    .slot.active{
+      outline-color:rgba(59,130,246,.75);
+      box-shadow:0 0 0 1px rgba(59,130,246,.35), var(--shadow);
+    }
+    .slotHead{
+      display:flex;align-items:center;justify-content:space-between;gap:8px;
+      padding:10px 10px 8px 10px;border-bottom:1px solid var(--border);
+      background:rgba(255,255,255,.02);
+      border-top-left-radius:12px;border-top-right-radius:12px;
+    }
+    .slotHead .left{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .slotHead .t{font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .slotHead .s{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .slotHead .actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    .slotHead .actions .btn{white-space:nowrap}
+
+    /* un seul controle de zoom (pourcentage éditable) */
+    .zoomCtl{
+      display:flex;gap:6px;align-items:center;
+      border:1px solid var(--border);border-radius:999px;
+      padding:4px 8px;background:rgba(255,255,255,.02);
+    }
+    .zoomCtl .btnTiny{
+      border:none;background:transparent;color:var(--text);
+      cursor:pointer;font-size:14px;line-height:1;padding:0 4px
+    }
+    .zoomCtl input{
+      width:74px;background:#0c0d10;color:var(--text);
+      border:1px solid var(--border);border-radius:999px;
+      padding:5px 8px;text-align:center;font-size:12px;
+    }
+
+    /* slot canvas */
+    .canvasWrap{
+      position:relative;
+      width:605px;
+      height:852px;
+      overflow:auto;
+      background:
+        radial-gradient(1200px 600px at 30% 20%, rgba(255,255,255,.06), transparent 60%),
+        radial-gradient(900px 500px at 70% 80%, rgba(255,255,255,.04), transparent 55%),
+        #000;
+      border-bottom-left-radius:12px;border-bottom-right-radius:12px;
+    }
+    .pageLayer{position:relative;display:inline-block}
+    canvas{display:block}
+    .overlay{position:absolute;inset:0;cursor:crosshair;pointer-events:none}
+    .zoneBox{
+      position:absolute;border:2px dashed rgba(34,197,94,.9);
+      background:rgba(34,197,94,.12);pointer-events:auto;
+    }
+    .zoneBox.active{outline:2px solid rgba(59,130,246,.8)}
+    .zoneLabel{
+      position:absolute;left:6px;top:6px;
+      font-size:11px;color:#062012;background:rgba(34,197,94,.9);
+      padding:2px 6px;border-radius:999px;
+      pointer-events:none;
+    }
+
+    /* slot footer: zones + notes */
+    .slotFoot{
+      border-top:1px solid var(--border);
+      background:rgba(255,255,255,.01);
+      padding:10px;
+      border-bottom-left-radius:12px;border-bottom-right-radius:12px;
+      display:flex;flex-direction:column;gap:10px;
+    }
+    .zonesHeader{
+      display:flex;align-items:center;justify-content:space-between;gap:8px;
+    }
+    .zonesHeader .muted{font-size:12px;color:var(--muted)}
+    .zonesList{
+      max-height:120px;overflow:auto;
+      border:1px solid var(--border);border-radius:10px;
+      background:#0c0d10;padding:6px;
+    }
+    .zoneItem{
+      display:flex;align-items:center;justify-content:space-between;
+      gap:8px;padding:6px;border-radius:8px;cursor:pointer;font-size:12px;
+    }
+    .zoneItem:hover{background:rgba(255,255,255,.04)}
+    .zoneItem.active{outline:2px solid rgba(59,130,246,.35);background:rgba(59,130,246,.10)}
+    .zoneItem .left{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .zoneItem .zid{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .zoneItem .meta{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .zoneItem .right{display:flex;gap:6px;align-items:center}
+    .zoneItem .tag{
+      font-size:11px;color:var(--muted);
+      border:1px solid var(--border);border-radius:999px;padding:2px 8px;
+      background:rgba(255,255,255,.02);
+    }
+    .noteBox{
+      display:flex;flex-direction:column;gap:8px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:rgba(255,255,255,.01);
+      padding:10px;
+    }
+    .noteTop{
+      display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+    }
+    .noteTop .pillMini{
+      font-size:11px;color:var(--muted);
+      border:1px solid var(--border);border-radius:999px;padding:4px 8px;
+      background:rgba(255,255,255,.02);
+    }
+    .noteTop select{
+      background:#0c0d10;color:var(--text);
+      border:1px solid var(--border);border-radius:10px;
+      padding:6px 8px;font-size:12px;
+      min-width:220px;
+    }
+    .noteBox textarea{
+      width:100%;min-height:90px;resize:vertical;
+      background:#0c0d10;color:var(--text);
+      border:1px solid var(--border);border-radius:10px;
+      padding:8px;font-size:12px;
+    }
+    .noteRow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .noteRow .miniBtn{
+      border:1px solid var(--border);background:var(--panel2);color:var(--text);
+      padding:6px 8px;border-radius:8px;cursor:pointer;font-size:12px
+    }
+    .linksBox{
+      border:1px dashed rgba(59,130,246,.35);
+      border-radius:12px;
+      padding:10px;
+      background:rgba(59,130,246,.06);
+      display:flex;flex-direction:column;gap:8px;
+    }
+    .linksBox .hdr{
+      display:flex;align-items:center;justify-content:space-between;gap:8px;
+      font-size:12px;color:var(--muted)
+    }
+    .linksList{
+      max-height:140px;overflow:auto;border:1px solid var(--border);
+      border-radius:10px;background:#0c0d10;padding:6px;
+      display:flex;flex-direction:column;gap:6px;
+    }
+    .linkItem{
+      display:flex;gap:8px;align-items:center;justify-content:space-between;
+      padding:6px;border-radius:10px;cursor:pointer;
+    }
+    .linkItem:hover{background:rgba(255,255,255,.04)}
+    .linkItem .left{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .linkItem .t{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .linkItem .s{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .linkItem .right{display:flex;gap:6px;align-items:center}
+    .empty{opacity:.45;text-align:center;margin-top:30px}
+
+    .ocrPanel{
+      position:absolute;right:14px;bottom:14px;width:420px;max-width:calc(100% - 28px);
+      height:360px;max-height:50%;
+      background:var(--panel);border:1px solid var(--border);border-radius:12px;
+      box-shadow:var(--shadow);display:none;flex-direction:column;overflow:hidden
+    }
+    .ocrPanel.active{display:flex}
+    .ocrHead{
+      padding:10px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;gap:10px
+    }
+    .ocrHead .left{display:flex;flex-direction:column}
+    .ocrHead .left .t{font-weight:800;font-size:13px}
+    .ocrHead .left .s{font-size:12px;color:var(--muted)}
+    .ocrBody{flex:1;min-height:0;display:flex;flex-direction:column}
+    .ocrBody textarea{
+      flex:1;min-height:0;border:none;outline:none;background:#0c0d10;color:var(--text);
+      padding:10px;font-size:12px;resize:none
+    }
+    .ocrFoot{padding:10px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap}
+
+    /* modal picker */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:50}
+    .modal.active{display:flex}
+    .backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55)}
+    .modalCard{
+      position:relative;
+      width:min(920px, calc(100% - 28px));
+      height:min(680px, calc(100% - 28px));
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:14px;
+      box-shadow:var(--shadow);
+      display:flex;flex-direction:column;overflow:hidden;
+    }
+    .modalHead{
+      padding:10px 12px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;gap:10px
+    }
+    .modalHead .t{font-weight:800}
+    .modalHead input{
+      flex:1;background:#0c0d10;color:var(--text);
+      border:1px solid var(--border);border-radius:10px;padding:8px 10px;
+      font-size:13px
+    }
+    .modalBody{flex:1;min-height:0;overflow:auto;padding:12px}
+    .notePick{
+      border:1px solid var(--border);border-radius:12px;background:#0c0d10;
+      padding:10px;display:flex;flex-direction:column;gap:10px;
+    }
+    .notePickItem{
+      border:1px solid var(--border);border-radius:12px;
+      padding:10px;cursor:pointer;background:rgba(255,255,255,.01);
+    }
+    .notePickItem:hover{background:rgba(255,255,255,.04)}
+    .notePickItem .top{display:flex;gap:10px;align-items:center;justify-content:space-between}
+    .notePickItem .id{font-weight:800;font-size:12px}
+    .notePickItem .meta{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .notePickItem .prev{margin-top:6px;font-size:12px;color:var(--text);opacity:.85;max-height:38px;overflow:hidden}
+    .modalFoot{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+    @media (max-width: 980px){
+      .sidebar{
+        position:absolute;left:0;top:104px;bottom:0;transform:translateX(-100%);
+        transition:transform .18s ease;z-index:20;box-shadow:var(--shadow)
+      }
+      .sidebar.open{transform:translateX(0)}
+    }
+  
+    /* Slot chrome visibility */
+    body.hideSlotChrome .slotHead,
+    body.hideSlotChrome .slotFoot{display:none !important;}
+    body.hideSlotChrome .slotBody{border-top-left-radius:12px;border-top-right-radius:12px;}
+    /* Presentation back button */
+    .presentBack{
+      position:fixed; z-index:9999;
+      top:12px; left:12px;
+      display:none;
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:rgba(20,22,28,.85);
+      color:var(--text);
+      cursor:pointer;
+      backdrop-filter: blur(8px);
+    }
+    body.presentation .presentBack{display:inline-flex;gap:8px;align-items:center;}
+    
+    /* ===== UI v14 (menus, overlay sidebar, accordions) ===== */
+    header{gap:10px}
+    .topbarLeft{display:flex;align-items:center;gap:10px;min-width:0}
+    .appTitle{font-weight:700;letter-spacing:.2px;white-space:nowrap}
+    .menus{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .menu{position:relative}
+    .menuBtn{
+      display:flex;align-items:center;gap:6px;
+      padding:7px 10px;border-radius:10px;border:1px solid var(--border);
+      background:var(--panel2);cursor:pointer;font-size:13px;color:var(--text)
+    }
+    .menuBtn:after{content:"▾";font-size:11px;color:var(--muted)}
+    .menuBtn:hover{border-color:rgba(255,255,255,.18)}
+    .menuPanel{
+      position:absolute;top:calc(100% + 6px);left:0;min-width:220px;
+      background:#0c0d10;border:1px solid var(--border);border-radius:12px;
+      box-shadow:0 12px 40px rgba(0,0,0,.55);
+      padding:8px;display:none;z-index:60
+    }
+    .menu.open .menuPanel{display:block}
+    .menuPanel .btn{width:100%;justify-content:flex-start}
+    .menuSep{height:1px;background:var(--border);margin:8px 0}
+
+    /* Sidebar as overlay: does NOT resize viewer */
+    .main{position:relative}
+    .sidebar{
+      position:absolute;left:0;top:0;bottom:0;
+      width:380px;max-width:min(92vw, 420px);
+      transform:translateX(calc(-100% - 10px));
+      transition:transform .18s ease;
+      z-index:50;
+      border-right:1px solid var(--border);
+      box-shadow: 12px 0 34px rgba(0,0,0,.55);
+    }
+    .sidebar.open{transform:translateX(0)}
+    .backdrop{
+      position:absolute;inset:0;background:rgba(0,0,0,.45);
+      display:none;z-index:45
+    }
+    .sidebar.open ~ .backdrop{display:block}
+    .content{flex:1;min-width:0}
+
+    /* Accordions inside sidebar */
+    .acc{border:1px solid var(--border);border-radius:12px;background:#0c0d10;margin:10px 0;overflow:hidden}
+    .accHead{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:10px 10px;cursor:pointer;user-select:none;
+      font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em
+    }
+    .accHead:hover{background:rgba(255,255,255,.04)}
+    .accBody{padding:10px 10px;display:none}
+    .acc.open .accBody{display:block}
+    .accChevron{color:var(--muted);font-size:12px}
+
+    /* Viewer zoom control in topbar */
+    .viewerTopbar .zoomGroup{display:flex;align-items:center;gap:8px;margin-left:auto}
+    .viewerTopbar .zoomGroup label{font-size:12px;color:var(--muted);white-space:nowrap}
+    .viewerTopbar .zoomGroup input[type="range"]{width:160px}
+
+    /* Slot contour wants A4 + 5px padding each side (total +10) */
+    .canvasWrap{padding:5px}
+
+    .pillMini{
+      font-size:11px;color:var(--muted);
+      border:1px solid var(--border);border-radius:999px;padding:4px 8px;
+      background:rgba(255,255,255,.02);
+      white-space:nowrap;
+    }
+    .globalNav{
+      display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+      padding:6px 10px;border:1px solid var(--border);
+      border-radius:14px;background:rgba(255,255,255,.02);
+      margin-left:10px;
+    }
+    .chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+    .chip{
+      border:1px solid var(--border);
+      background:var(--panel2);
+      color:var(--text);
+      padding:6px 8px;
+      border-radius:999px;
+      cursor:pointer;
+      font-size:11px;
+      user-select:none;
+    }
+    .chip.on{border-color:rgba(34,197,94,.55); box-shadow:0 0 0 2px rgba(34,197,94,.15) inset;}
+
+
+    .slot.sel{outline:2px solid rgba(34,197,94,.75); box-shadow:0 0 0 4px rgba(34,197,94,.15);} 
+</style>
+</head>
+
+<body>
+  <button class="presentBack" id="btnExitPresentation" title="Retour / quitter le mode présentation">← Retour</button>
+<div class="app">
+  <header>
+    <div class="title">PDF Manager v10</div>
+    <button class="btn" id="btnSidebar">☰</button>
+    <button class="btn primary" id="btnLoad">Charger PDFs</button>
+    <button class="btn" id="btnAddToDoc" title="Ajouter un PDF au document actif (append)">Ajouter au doc</button>
+    <button class="btn info" id="btnSaveDoc" title="Exporter le document actif (édition requiert PDF-Lib ok)">Exporter doc</button>
+
+    <button class="btn" id="btnExportNotes" title="Exporter toutes les notes/zones/liens (session) en JSON">Exporter notes JSON</button>
+    <button class="btn" id="btnImportNotes" title="Charger un JSON de notes (fusion)">Importer notes JSON</button>
+
+    <button class="btn" id="btnTogglePresentation" title="Mode présentation (masque les panneaux)">Mode présentation</button>
+    <button class="btn" id="btnToggleSlotChrome" title="Afficher/masquer les en-têtes et pieds des slots">Slots UI</button>
+    <button class="btn" id="btnExportPreset" title="Exporter le preset de configuration (UI/layout) en JSON">Exporter preset</button>
+    <button class="btn" id="btnImportPreset" title="Importer un preset de configuration (UI/layout) depuis JSON">Importer preset</button>
+<div class="grow"></div>
+    <span class="pill" id="statusPill">0 document</span>
+    <span class="pill" id="selPill">0 sélection</span>
+  </header>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="main">
+    <aside class="sidebar" id="sidebar">
+      <h3>Affichage des pages (filtre)</h3>
+      <div class="field">
+        <label>Exemples: <span class="small">1-3</span> / <span class="small">1-4,6-8</span> / <span class="small">10</span></label>
+        <input id="inputRanges" placeholder="1-4,6-8,10" />
+      </div>
+      <div class="row">
+        <button class="btn" id="btnApplyRanges">Appliquer</button>
+        <button class="btn" id="btnClearRanges">Tout afficher</button>
+      </div>
+
+      <h3>Mode de visualisation</h3>
+      <div class="field">
+        <label>Mode</label>
+        <select id="selectMode">
+          <option value="simple">Simple (1 slot)</option>
+          <option value="horizontal">Horizontal (slots → lignes)</option>
+          <option value="vertical">Vertical (slots → colonnes)</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Slots</label>
+          <div class="row">
+            <button class="btn" id="btnSlotsMinus">-</button>
+            <input id="inputSlots" type="number" min="1" value="1" />
+            <button class="btn" id="btnSlotsPlus">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Lignes (mode horizontal)</label>
+          <input id="inputRows" type="number" min="1" value="1" />
+        </div>
+        <div class="field">
+          <label>Colonnes (mode vertical)</label>
+          <input id="inputCols" type="number" min="1" value="1" />
+        </div>
+      </div>
+
+      <h3>Taille des slots (manuel)</h3>
+      <div class="row">
+        <div class="field">
+          <label>Largeur défaut (px)</label>
+          <input id="inputSlotWDefault" type="number" min="200" value="595" />
+        </div>
+        <div class="field">
+          <label>Hauteur défaut (px)</label>
+          <input id="inputSlotHDefault" type="number" min="200" value="842" />
+        </div>
+      </div>
+
+      <h3>Zoom</h3>
+
+      <h3>Zoom d'affichage (slots)</h3>
+      <div class="field">
+        <label>Render: <span id="renderZoomLabel" class="small">100%</span></label>
+        <input id="inputRenderZoom" type="range" min="50" max="140" value="100" />
+      </div>
+      <div class="row">
+        <button class="btn" id="btnResetRenderZoom">Reset Render</button>
+        <button class="btn" id="btnTogglePresentation2">Mode présentation</button>
+        <button class="btn" id="btnToggleSlotChrome2">Slots UI</button>
+      </div>
+
+      <div class="field">
+        <label>Global: <span id="zoomLabel" class="small">100%</span></label>
+        <input id="inputZoom" type="range" min="50" max="220" value="100" />
+      </div>
+      <div class="row">
+        <button class="btn" id="btnResetGlobalZoom">Reset Zoom</button>
+        <button class="btn" id="btnResetGlobalRot">Reset Rotation</button>
+      </div>
+      <div class="hint">
+        Le zoom global multiplie le zoom individuel de chaque slot.
+      </div>
+
+      <h3>Navigation</h3>
+      <div class="hint">
+        Clique un slot → il devient actif (contour bleu).<br/>
+        Clique une page dans la liste → la page est envoyée vers le slot actif.<br/>
+        Clic droit sur une page dans la liste → sélection/désélection.
+      </div>
+
+      <h3>Pages (document actif)</h3>
+      <div class="row" style="gap:8px;margin-bottom:8px">
+        <button class="btn" id="btnSelectAllPages">Tout sélectionner</button>
+        <button class="btn" id="btnDeselectAllPages">Tout désélectionner</button>
+        <button class="btn info" id="btnApplyPagesToSlots" title="Appliquer les pages sélectionnées sur les slots (1 page par slot). Si sélection > nb slots, chaque clic applique le batch suivant.">Appliquer sélection → slots</button>
+      </div>
+      <div class="pagesList" id="pagesList"></div>
+
+      <h3>Opérations pages</h3>
+      <div class="row">
+        <button class="btn danger" id="btnDeleteSel">Supprimer sélection</button>
+        <button class="btn info" id="btnExtractSel">Extraire sélection</button>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="btnMergeSel">Fusionner sélection</button>
+        <button class="btn" id="btnClearSel">Vider sélection</button>
+      </div>
+
+      <div class="sep"></div>
+
+      <h3>OCR</h3>
+      <div class="row">
+        <button class="btn" id="btnOCRPanel">Ouvrir OCR</button>
+        <button class="btn warn" id="btnZoneToggle">Zones: OFF</button>
+      </div>
+      <div class="hint">
+        OCR: doc / slots visibles / sélection / zone(s) (slot actif).
+      </div>
+
+      <div class="sep"></div>
+
+      <h3>Notes & liens</h3>
+      <div class="hint">
+        Les notes sont versionnées par zone (plusieurs entrées).<br/>
+        Les liens peuvent pointer vers une note précise (noteId) d'une zone.
+      </div>
+      <div class="row" style="gap:8px">
+        <button class="btn" id="btnOpenNotePicker">Explorer toutes les notes</button>
+        <button class="btn" id="btnOpenLinkPicker">Créer un lien (depuis note active)</button>
+      </div>
+    </aside>
+    <div class="backdrop" id="backdrop"></div>
+
+    <section class="content">
+      <div class="viewerTopbar">
+        <div class="modeBtns">
+          <button class="modeBtn" data-mode="simple" id="modeSimple">Simple</button>
+          <button class="modeBtn" data-mode="horizontal" id="modeHoriz">Horizontal</button>
+          <button class="modeBtn" data-mode="vertical" id="modeVert">Vertical</button>
+        </div>
+
+        <div class="globalNav" id="globalNavBar" title="Navigation globale">
+          <span class="pillMini">Page globale</span>
+          <button class="btn" id="btnGPrevJump" title="Saut arrière (par nb de slots ciblés)">⏮</button>
+          <button class="btn" id="btnGPrev" title="Page précédente">◀</button>
+          <input id="inputGStep" type="number" min="1" value="1" title="Pas (nombre de pages)" style="width:70px"/>
+          <button class="btn" id="btnGNext" title="Page suivante">▶</button>
+          <button class="btn" id="btnGNextJump" title="Saut avant (par nb de slots ciblés)">⏭</button>
+
+          <span class="pillMini">Aller à</span>
+          <input id="inputGPage" type="number" min="1" value="1" title="Numéro de page (absolu, 1-based)" style="width:88px"/>
+          <button class="btn info" id="btnGApply" title="Appliquer la page à la cible">Appliquer</button>
+
+          <select id="selectGScope" title="Cible" style="min-width:190px">
+            <option value="all">Tous les slots</option>
+            <option value="selected">Slots sélectionnés</option>
+            <option value="rows">Lignes sélectionnées</option>
+            <option value="cols">Colonnes sélectionnées</option>
+          </select>
+
+          <div class="chips" id="chipsRows" aria-label="Lignes"></div>
+          <div class="chips" id="chipsCols" aria-label="Colonnes"></div>
+
+          
+          <span class="pillMini">Slots</span>
+          <button class="btn" id="btnSelAllSlots" title="Sélectionner tous les slots">Tout</button>
+          <button class="btn" id="btnDeselAllSlots" title="Désélectionner tous les slots">Aucun</button>
+          <span class="muted" style="font-size:12px;opacity:.75">N</span>
+          <input id="inputSelN" type="number" min="1" value="1" title="Nombre de slots" style="width:64px"/>
+          <button class="btn" id="btnSelN" title="Sélectionner N slots (à partir du slot actif)">+N</button>
+          <button class="btn" id="btnDeselN" title="Désélectionner N slots (à partir du slot actif)">−N</button>
+
+          <button class="btn" id="btnGClear" title="Vider les sélections">Clear</button>
+        </div>
+
+        <div class="grow"></div>
+        <span class="pill" id="docInfoPill">—</span>
+      </div>
+
+      <div class="viewer" id="viewer">
+        <div class="empty" id="emptyState">Aucun PDF chargé. Cliquez sur “Charger PDFs”.</div>
+      </div>
+
+      <div class="ocrPanel" id="ocrPanel">
+        <div class="ocrHead">
+          <div class="left">
+            <div class="t">OCR</div>
+            <div class="s" id="ocrStatus">Prêt</div>
+          </div>
+          <div class="row" style="max-width:220px;gap:6px">
+            <button class="btn" id="btnOCRClose">Fermer</button>
+            <button class="btn" id="btnOCRCopy">Copier</button>
+          </div>
+        </div>
+        <div class="ocrBody">
+          <textarea id="ocrText" placeholder="Résultat OCR…"></textarea>
+        </div>
+        <div class="ocrFoot">
+          <button class="btn" id="btnOCRDoc">OCR doc</button>
+          <button class="btn" id="btnOCRVisible">OCR slots visibles</button>
+          <button class="btn" id="btnOCRSelected">OCR sélection</button>
+          <button class="btn warn" id="btnOCRZone">OCR zones (slot actif)</button>
+          <button class="btn" id="btnOCRClear">Effacer</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Modal: pick notes / pick target for link -->
+  <div class="modal" id="modalPicker" aria-hidden="true">
+    <div class="backdrop" data-act="close"></div>
+    <div class="modalCard">
+      <div class="modalHead">
+        <div class="t" id="modalTitle">Notes</div>
+        <input id="modalSearch" placeholder="Rechercher (doc, page, zone, note, texte)…" />
+        <button class="btn" data-act="close">Fermer</button>
+      </div>
+      <div class="modalBody">
+        <div class="notePick" id="modalList"></div>
+      </div>
+      <div class="modalFoot">
+        <button class="btn" data-act="close">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ===================== PDF.js worker ===================== */
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+/* ===================== Utils ===================== */
+const $ = (sel, root=document) => root.querySelector(sel);
+function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
+
+function isPdfBytes(u8){
+  try{
+    if(!u8 || u8.length < 5) return false;
+    // "%PDF-" = 0x25 0x50 0x44 0x46 0x2D
+    return u8[0]===0x25 && u8[1]===0x50 && u8[2]===0x44 && u8[3]===0x46 && u8[4]===0x2D;
+  }catch(e){ return false; }
+}
+function degreesNorm90(deg){
+  let d=((deg%360)+360)%360;
+  d=Math.round(d/90)*90;
+  return ((d%360)+360)%360;
+}
+function sanitizeFilename(name){
+  return (name||"document").replace(/[\/\\?%*:|"<>]/g, "_").slice(0,120);
+}
+function downloadBytes(bytes, filename, mime="application/pdf"){
+  const blob=new Blob([bytes], {type:mime});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+}
+function downloadText(text, filename, mime="application/json"){
+  const blob=new Blob([text], {type:mime});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+}
+async function readFileAsUint8(file){
+  const buf=await file.arrayBuffer();
+  return new Uint8Array(buf);
+}
+function findPdfHeaderOffset(bytes){
+  const max = Math.min(bytes.length-5, 2048);
+  for(let i=0;i<=max;i++){
+    if(bytes[i]===0x25 && bytes[i+1]===0x50 && bytes[i+2]===0x44 && bytes[i+3]===0x46 && bytes[i+4]===0x2D){
+      return i;
+    }
+  }
+  return -1;
+}
+function normalizePdfBytes(bytes){
+  const off=findPdfHeaderOffset(bytes);
+  if(off<=0) return bytes;
+  return bytes.slice(off);
+}
+function parsePageRanges(input, maxPages){
+  if(!input || !input.trim()) return null;
+  const cleaned=input.replaceAll("/", ",").replace(/\\s+/g,"");
+  const parts=cleaned.split(",").filter(Boolean);
+  const out=new Set();
+  for(const part of parts){
+    if(part.includes("-")){
+      const [aRaw,bRaw]=part.split("-");
+      const a=parseInt(aRaw,10), b=parseInt(bRaw,10);
+      if(!Number.isFinite(a)||!Number.isFinite(b)) continue;
+      const start=clamp(Math.min(a,b),1,maxPages);
+      const end=clamp(Math.max(a,b),1,maxPages);
+      for(let p=start;p<=end;p++) out.add(p);
+    }else{
+      const p=parseInt(part,10);
+      if(Number.isFinite(p)&&p>=1&&p<=maxPages) out.add(p);
+    }
+  }
+  const arr=Array.from(out).sort((x,y)=>x-y);
+  return arr.length?arr:null;
+}
+function genId(prefix="z"){
+  return prefix + "_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+}
+function nowIso(){ return new Date().toISOString(); }
+
+async function sha256Hex(u8){
+  const buf = (u8 instanceof Uint8Array) ? u8 : new Uint8Array(u8);
+  const digest = await crypto.subtle.digest("SHA-256", buf);
+  const arr = Array.from(new Uint8Array(digest));
+  return arr.map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+function short(s, n=140){
+  const t=(s||"").replace(/\\s+/g," ").trim();
+  return t.length>n ? (t.slice(0,n-1)+"…") : t;
+}
+
+/* ===================== Annotation + Links model ===================== */
+/*
+  Doc.annotations:
+    key: `${docId}::${sourceDocId}::${sourcePageNumber}`
+    value: { zones: Zone[] }
+
+  Zone:
+    { id, rect:{x,y,w,h} (0..1), createdAt, notes:[Note] }
+
+  Note (version):
+    { id, ts (ms), text }
+
+  App.links:
+    Link { id, createdAt, label,
+           from:{docId, sourceDocId, sourcePageNumber, zoneId, noteId},
+           to:{docId, sourceDocId, sourcePageNumber, zoneId, noteId} }
+*/
+function pageKey(docId, ref){
+  return `${docId}::${ref.sourceDocId}::${ref.sourcePageNumber}`;
+}
+
+/* ===================== Data Model ===================== */
+class DocModel{
+  constructor({id,name,bytes,pdfjsDoc,pdfLibDoc}){
+    this.id=id; this.name=name; this.bytes=bytes;
+    this.fingerprint=null; // sha256 of normalized PDF bytes
+    this.pdfjsDoc=pdfjsDoc;
+    this.pdfLibDoc=pdfLibDoc; // peut être null si parse échoue
+    this.pdfLibAvailable=!!pdfLibDoc;
+    this.sourcePageCount=pdfjsDoc.numPages;
+
+    this.pages=Array.from({length:this.sourcePageCount}, (_,i)=>({
+      sourceDocId:id,
+      sourcePageNumber:i+1,
+      rotation:0
+    }));
+
+    this.globalRotation=0;
+    this.filter=null;           // array 1-based pages visibles
+    this.selected=new Set();    // indices 0-based dans pages courantes
+
+    this.annotations={};        // key -> { zones:[] }
+  }
+}
+
+/* ===================== App ===================== */
+class PDFTool{
+  constructor(){
+    this.docs=[];
+    this.activeDocId=null;
+
+    this.mode="simple";
+    this.slots=1;
+    this.rows=1;
+    this.cols=1;
+
+    this.slotDefaultW=595;
+    this.slotDefaultH=842;
+    this.slotSizes={};
+
+    this.globalZoom=1.0;
+    this.renderZoom=1.0; // layout zoom (slots overview)
+    this.presentationMode=false;
+    this.showSlotChrome=true;
+    this.slotShowZones=[]; // per-slot zone overlay visibility
+    this.slotZooms=[];
+
+    this.slotCursor=[0];
+    this.activeSlot=0;
+
+    
+    this.selectedSlots=new Set();
+    this.selectedRows=new Set();
+    this.selectedCols=new Set();
+    this.globalScope="all";
+this.zoneEnabled=false;
+
+    // per-slot selected zone id
+    this.activeZoneBySlot={};
+    // per-slot selected note version id (within selected zone)
+    this.activeNoteBySlot={};
+
+    // preserve scroll positions
+    this.slotScroll=[];
+
+    // session links
+    this.links=[];
+
+    // modal picker state
+    this.pickerMode="notes"; // 'notes' | 'linkTarget'
+    this.pendingLinkFrom=null; // {docId, sourceDocId, sourcePageNumber, zoneId, noteId}
+
+    this.renderToken=0;
+
+    this.el={
+      sidebar: $("#sidebar"),
+      tabs: $("#tabs"),
+      viewer: $("#viewer"),
+      empty: $("#emptyState"),
+      status: $("#statusPill"),
+      sel: $("#selPill"),
+      docInfo: $("#docInfoPill"),
+      selectGScope: $("#selectGScope"),
+      inputGPage: $("#inputGPage"),
+      inputGStep: $("#inputGStep"),
+      btnGApply: $("#btnGApply"),
+      btnGPrev: $("#btnGPrev"),
+      btnGNext: $("#btnGNext"),
+      btnGPrevJump: $("#btnGPrevJump"),
+      btnGNextJump: $("#btnGNextJump"),
+      btnGClear: $("#btnGClear"),
+      chipsRows: $("#chipsRows"),
+      chipsCols: $("#chipsCols"),
+
+      btnSidebar: $("#btnSidebar"),
+      btnLoad: $("#btnLoad"),
+      btnAddToDoc: $("#btnAddToDoc"),
+      btnSaveDoc: $("#btnSaveDoc"),
+      btnExportNotes: $("#btnExportNotes"),
+      btnImportNotes: $("#btnImportNotes"),
+      btnTogglePresentation: $("#btnTogglePresentation"),
+      btnExportPreset: $("#btnExportPreset"),
+      btnImportPreset: $("#btnImportPreset"),
+      btnToggleSlotChrome: $("#btnToggleSlotChrome"),
+      btnToggleSlotChrome2: $("#btnToggleSlotChrome2"),
+      btnExitPresentation: $("#btnExitPresentation"),
+      inputRenderZoom: $("#inputRenderZoom"),
+      renderZoomLabel: $("#renderZoomLabel"),
+      btnResetRenderZoom: $("#btnResetRenderZoom"),
+      btnTogglePresentation2: $("#btnTogglePresentation2"),
+
+      inputRanges: $("#inputRanges"),
+      btnApplyRanges: $("#btnApplyRanges"),
+      btnClearRanges: $("#btnClearRanges"),
+
+      selectMode: $("#selectMode"),
+      inputSlots: $("#inputSlots"),
+      btnSlotsMinus: $("#btnSlotsMinus"),
+      btnSlotsPlus: $("#btnSlotsPlus"),
+      inputRows: $("#inputRows"),
+      inputCols: $("#inputCols"),
+
+      inputSlotWDefault: $("#inputSlotWDefault"),
+      inputSlotHDefault: $("#inputSlotHDefault"),
+
+      inputZoom: $("#inputZoom"),
+      zoomLabel: $("#zoomLabel"),
+      btnResetGlobalZoom: $("#btnResetGlobalZoom"),
+      btnResetGlobalRot: $("#btnResetGlobalRot"),
+
+      pagesList: $("#pagesList"),
+      btnSelectAllPages: $("#btnSelectAllPages"),
+      btnDeselectAllPages: $("#btnDeselectAllPages"),
+      btnApplyPagesToSlots: $("#btnApplyPagesToSlots"),
+
+      btnDeleteSel: $("#btnDeleteSel"),
+      btnExtractSel: $("#btnExtractSel"),
+      btnMergeSel: $("#btnMergeSel"),
+      btnClearSel: $("#btnClearSel"),
+
+      modeSimple: $("#modeSimple"),
+      modeHoriz: $("#modeHoriz"),
+      modeVert: $("#modeVert"),
+
+      btnOCRPanel: $("#btnOCRPanel"),
+      btnZoneToggle: $("#btnZoneToggle"),
+
+      ocrPanel: $("#ocrPanel"),
+      btnOCRClose: $("#btnOCRClose"),
+      btnOCRCopy: $("#btnOCRCopy"),
+      btnOCRClear: $("#btnOCRClear"),
+      btnOCRDoc: $("#btnOCRDoc"),
+      btnOCRVisible: $("#btnOCRVisible"),
+      btnOCRSelected: $("#btnOCRSelected"),
+      btnOCRZone: $("#btnOCRZone"),
+      ocrText: $("#ocrText"),
+      ocrStatus: $("#ocrStatus"),
+
+      btnOpenNotePicker: $("#btnOpenNotePicker"),
+      btnOpenLinkPicker: $("#btnOpenLinkPicker"),
+
+      modal: $("#modalPicker"),
+      modalTitle: $("#modalTitle"),
+      modalSearch: $("#modalSearch"),
+      modalList: $("#modalList"),
+    };
+
+    // Global navigation events
+    if(this.el.selectGScope){
+      this.el.selectGScope.onchange=()=>{
+        this.globalScope=this.el.selectGScope.value;
+        const {cols}=this.computeGrid(this.slots, this.mode);
+        this.syncGlobalNavChips(cols);
+      };
+    }
+    const stepVal=()=>Math.max(1, parseInt(this.el.inputGStep?.value||"1",10));
+    this.el.btnGPrev && (this.el.btnGPrev.onclick=()=>this.applyGlobalOffset(-stepVal()));
+    this.el.btnGNext && (this.el.btnGNext.onclick=()=>this.applyGlobalOffset(stepVal()));
+    this.el.btnGPrevJump && (this.el.btnGPrevJump.onclick=()=>{
+      const grid=this.computeGrid ? this.computeGrid() : {cols:1};
+      const cols=grid.cols||1;
+      const n=(this.getTargetSlotIndices ? this.getTargetSlotIndices(cols).length : this.slots) || 1;
+      this.applyGlobalOffset(-n);
+    });
+this.el.btnGNextJump && (this.el.btnGNextJump.onclick=()=>{
+      const grid=this.computeGrid ? this.computeGrid() : {cols:1};
+      const cols=grid.cols||1;
+      const n=(this.getTargetSlotIndices ? this.getTargetSlotIndices(cols).length : this.slots) || 1;
+      this.applyGlobalOffset(n);
+    });
+this.el.btnGApply && (this.el.btnGApply.onclick=()=>this.applyGlobalAbsolute(parseInt(this.el.inputGPage?.value||"1",10)));
+    this.el.btnGClear && (this.el.btnGClear.onclick=()=>{ this.selectedSlots.clear(); 
+    this.el.btnSelAllSlots && (this.el.btnSelAllSlots.onclick=()=>this.selectAllSlots());
+    this.el.btnDeselAllSlots && (this.el.btnDeselAllSlots.onclick=()=>this.deselectAllSlots());
+    this.el.btnSelN && (this.el.btnSelN.onclick=()=>this.selectNSlotsFromActive());
+    this.el.btnDeselN && (this.el.btnDeselN.onclick=()=>this.deselectNSlotsFromActive());
+this.selectedRows.clear(); this.selectedCols.clear(); this.render(); });
+
+
+    this.bind();
+    this.syncUI();
+  }
+
+  activeDoc(){
+    return this.docs.find(d=>d.id===this.activeDocId) || null;
+  }
+
+  setOCRStatus(t){ this.el.ocrStatus.textContent=t; }
+
+  syncSelectionPill(){
+    const doc=this.activeDoc();
+    const n=doc?doc.selected.size:0;
+    this.el.sel.textContent = `${n} sélection`;
+  }
+
+  syncUI(){
+    this.el.status.textContent = `${this.docs.length} document(s)`;
+    this.syncSelectionPill();
+    this.el.zoomLabel.textContent = `${Math.round(this.globalZoom*100)}%`;
+    if(this.el.renderZoomLabel) this.el.renderZoomLabel.textContent = `${Math.round((this.renderZoom||1)*100)}%`;
+    if(this.el.inputRenderZoom) this.el.inputRenderZoom.value = Math.round((this.renderZoom||1)*100);
+  }
+
+  visiblePageIndices(doc){
+    if(!doc) return [];
+    const total=doc.pages.length;
+    const base=Array.from({length:total}, (_,i)=>i);
+    if(!doc.filter) return base;
+    const set=new Set(doc.filter.map(n=>n-1).filter(i=>i>=0&&i<total));
+    return base.filter(i=>set.has(i));
+  }
+
+  ensureSlotCursors(){
+    const doc=this.activeDoc();
+    const visible=this.visiblePageIndices(doc);
+    const maxCursor=Math.max(0, visible.length-1);
+
+    while(this.slotCursor.length < this.slots) this.slotCursor.push(0);
+    while(this.slotCursor.length > this.slots) this.slotCursor.pop();
+
+    for(let s=0;s<this.slots;s++){
+      this.slotCursor[s]=clamp(this.slotCursor[s] ?? 0, 0, maxCursor);
+    }
+    this.activeSlot = clamp(this.activeSlot, 0, this.slots-1);
+  }
+
+  ensureSlotZooms(){
+    while(this.slotZooms.length < this.slots) this.slotZooms.push(1.0);
+    while(this.slotZooms.length > this.slots) this.slotZooms.pop();
+    for(let s=0;s<this.slots;s++){
+      const z=this.slotZooms[s];
+      this.slotZooms[s]=(Number.isFinite(z)&&z>0.1)?z:1.0;
+    }
+  }
+
+  bind(){
+    // delegation: select all / deselect all
+    document.addEventListener('click', (ev) => {
+      const t = ev.target;
+      if(!(t instanceof HTMLElement)) return;
+
+      if(t.id === 'btnSelectAllPages'){
+        const doc = this.activeDoc(); if(!doc) return;
+        const visible = this.visiblePageIndices(doc);
+        for(const idx of visible) doc.selected.add(idx);
+        this.syncSelectionPill();
+        this.renderPagesList();
+        this.render();
+      }
+      if(t.id === 'btnDeselectAllPages'){
+        const doc = this.activeDoc(); if(!doc) return;
+        doc.selected.clear();
+        this.syncSelectionPill();
+        this.renderPagesList();
+        this.render();
+      }
+    }, { passive: true });
+
+    this.el.btnSidebar.onclick = ()=>this.el.sidebar.classList.toggle("open");
+
+    this.el.btnLoad.onclick = ()=>this.loadPDFs();
+    this.el.btnAddToDoc.onclick = ()=>this.addPDFToActiveDoc();
+    this.el.btnSaveDoc.onclick = ()=>this.exportActiveDoc();
+
+    this.el.btnExportNotes.onclick = ()=>this.exportNotesJSON();
+    this.el.btnImportNotes.onclick = ()=>this.importNotesJSON();
+
+    // Presentation mode
+    const applyPresentation = ()=>{
+      document.body.classList.toggle("presentation", !!this.presentationMode);
+      const label = this.presentationMode ? "Quitter présentation" : "Mode présentation";
+      if(this.el.btnTogglePresentation) this.el.btnTogglePresentation.textContent = label;
+      if(this.el.btnTogglePresentation2) this.el.btnTogglePresentation2.textContent = label;
+    };
+    this.el.btnTogglePresentation && (this.el.btnTogglePresentation.onclick = ()=>{
+      this.presentationMode = !this.presentationMode;
+      applyPresentation();
+    });
+    this.el.btnTogglePresentation2 && (this.el.btnTogglePresentation2.onclick = ()=>{
+      this.presentationMode = !this.presentationMode;
+      applyPresentation();
+    });
+
+    // Render (layout) zoom
+    const syncRenderZoom = ()=>{
+      if(this.el.renderZoomLabel) this.el.renderZoomLabel.textContent = `${Math.round(this.renderZoom*100)}%`;
+    };
+    if(this.el.inputRenderZoom){
+      this.el.inputRenderZoom.oninput = ()=>{
+        this.renderZoom = (parseInt(this.el.inputRenderZoom.value,10)||100)/100;
+        syncRenderZoom();
+        this.render();
+      };
+    }
+    if(this.el.btnResetRenderZoom){
+      this.el.btnResetRenderZoom.onclick = ()=>{
+        if(this.el.inputRenderZoom){
+          this.el.inputRenderZoom.value = 100;
+          this.el.inputRenderZoom.dispatchEvent(new Event("input"));
+        }
+      };
+    }
+
+    // Presets
+    this.el.btnExportPreset && (this.el.btnExportPreset.onclick = ()=>this.exportPresetJSON());
+    this.el.btnImportPreset && (this.el.btnImportPreset.onclick = ()=>this.importPresetJSON());
+
+    // Slot chrome (headers/footers) visibility
+    const applySlotChrome = ()=>{
+      document.body.classList.toggle("hideSlotChrome", !this.showSlotChrome);
+      const label = this.showSlotChrome ? "Slots UI" : "Slots UI (OFF)";
+      if(this.el.btnToggleSlotChrome) this.el.btnToggleSlotChrome.textContent = label;
+      if(this.el.btnToggleSlotChrome2) this.el.btnToggleSlotChrome2.textContent = label;
+    };
+    this.el.btnToggleSlotChrome && (this.el.btnToggleSlotChrome.onclick = ()=>{
+      this.showSlotChrome = !this.showSlotChrome;
+      applySlotChrome();
+    });
+    this.el.btnToggleSlotChrome2 && (this.el.btnToggleSlotChrome2.onclick = ()=>{
+      this.showSlotChrome = !this.showSlotChrome;
+      applySlotChrome();
+    });
+
+    // Presentation exit (floating)
+    this.el.btnExitPresentation && (this.el.btnExitPresentation.onclick = ()=>{
+      this.presentationMode = false;
+      document.body.classList.remove("presentation");
+      // keep slot chrome state as-is
+    });
+
+    // apply initial states
+    applySlotChrome();
+
+
+
+
+    this.el.btnOpenNotePicker.onclick = ()=>this.openPicker("notes");
+    this.el.btnOpenLinkPicker.onclick = ()=>this.startLinkFromActiveNote();
+
+    this.el.btnApplyRanges.onclick = ()=>this.applyRanges();
+    this.el.btnClearRanges.onclick = ()=>this.clearRanges();
+
+    const setMode=(m)=>{
+      this.mode=m;
+      this.el.selectMode.value=m;
+      this.syncModeButtons();
+      this.normalizeModeDefaults();
+      this.render();
+    };
+    this.el.selectMode.onchange = ()=>setMode(this.el.selectMode.value);
+    this.el.modeSimple.onclick=()=>setMode("simple");
+    this.el.modeHoriz.onclick=()=>setMode("horizontal");
+    this.el.modeVert.onclick=()=>setMode("vertical");
+
+    this.el.inputSlots.onchange = ()=>{
+      const doc=this.activeDoc();
+      const max=doc?Math.max(1, this.visiblePageIndices(doc).length):1;
+      const v=clamp(parseInt(this.el.inputSlots.value,10)||1, 1, max);
+      this.slots=v;
+      this.el.inputSlots.value=v;
+      this.ensureSlotCursors();
+      this.ensureSlotZooms();
+      this.render();
+    };
+    this.el.btnSlotsMinus.onclick=()=>{
+      this.el.inputSlots.value = clamp((parseInt(this.el.inputSlots.value,10)||1)-1, 1, 9999);
+      this.el.inputSlots.dispatchEvent(new Event("change"));
+    };
+    this.el.btnSlotsPlus.onclick=()=>{
+      this.el.inputSlots.value = clamp((parseInt(this.el.inputSlots.value,10)||1)+1, 1, 9999);
+      this.el.inputSlots.dispatchEvent(new Event("change"));
+    };
+
+    this.el.inputRows.onchange=()=>{
+      this.rows=Math.max(1, parseInt(this.el.inputRows.value,10)||1);
+      this.el.inputRows.value=this.rows;
+      this.render();
+    };
+    this.el.inputCols.onchange=()=>{
+      this.cols=Math.max(1, parseInt(this.el.inputCols.value,10)||1);
+      this.el.inputCols.value=this.cols;
+      this.render();
+    };
+
+    this.el.inputSlotWDefault.onchange=()=>{
+      this.slotDefaultW=Math.max(200, parseInt(this.el.inputSlotWDefault.value,10)||595);
+      this.el.inputSlotWDefault.value=this.slotDefaultW;
+      this.render();
+    };
+    this.el.inputSlotHDefault.onchange=()=>{
+      this.slotDefaultH=Math.max(200, parseInt(this.el.inputSlotHDefault.value,10)||842);
+      this.el.inputSlotHDefault.value=this.slotDefaultH;
+      this.render();
+    };
+
+    this.el.inputZoom.oninput=()=>{
+      this.globalZoom=(parseInt(this.el.inputZoom.value,10)||100)/100;
+      this.el.zoomLabel.textContent=`${Math.round(this.globalZoom*100)}%`;
+      document.documentElement.style.setProperty("--gap", `${clamp(Math.round(12 + (this.globalZoom-1)*20), 10, 44)}px`);
+      this.render();
+    };
+
+    this.el.btnResetGlobalZoom.onclick=()=>{
+      this.el.inputZoom.value=100;
+      this.el.inputZoom.dispatchEvent(new Event("input"));
+    };
+    this.el.btnResetGlobalRot.onclick=()=>{
+      const doc=this.activeDoc(); if(!doc) return;
+      doc.globalRotation=0;
+      this.renderPagesList();
+      this.render();
+    };
+
+    this.el.btnDeleteSel.onclick=()=>this.deleteSelected();
+    this.el.btnExtractSel.onclick=()=>this.extractSelected();
+    this.el.btnMergeSel.onclick=()=>this.mergeSelected();
+    this.el.btnClearSel.onclick=()=>{
+      const doc=this.activeDoc(); if(!doc) return;
+      doc.selected.clear();
+      this.syncSelectionPill();
+      this.renderPagesList();
+      this.render();
+    };
+
+    this.el.btnOCRPanel.onclick=()=>this.el.ocrPanel.classList.toggle("active");
+    this.el.btnOCRClose.onclick=()=>this.el.ocrPanel.classList.remove("active");
+    this.el.btnOCRCopy.onclick=async ()=>{
+      try{ await navigator.clipboard.writeText(this.el.ocrText.value||""); }
+      catch(e){ alert("Copie impossible (permissions navigateur)."); }
+    };
+    this.el.btnOCRClear.onclick=()=>{ this.el.ocrText.value=""; this.setOCRStatus("Prêt"); };
+
+    this.el.btnZoneToggle.onclick=()=>{
+      this.zoneEnabled=!this.zoneEnabled;
+      this.el.btnZoneToggle.textContent=this.zoneEnabled?"Zones: ON":"Zones: OFF";
+      this.render();
+    };
+
+    this.el.btnOCRDoc.onclick=()=>this.ocrDocument();
+    this.el.btnOCRVisible.onclick=()=>this.ocrVisibleSlots();
+    this.el.btnOCRSelected.onclick=()=>this.ocrSelectedPages();
+    this.el.btnOCRZone.onclick=()=>this.ocrZonesActiveSlot();
+
+    // modal events
+    this.el.modal.addEventListener("click",(e)=>{
+      const t=e.target;
+      if(!(t instanceof HTMLElement)) return;
+      const act=t.getAttribute("data-act");
+      if(act==="close") this.closePicker();
+    });
+    this.el.modalSearch.addEventListener("input", ()=>this.renderPickerList());
+
+    window.addEventListener("keydown",(e)=>{
+      if(e.key==="Escape"){
+        this.el.ocrPanel.classList.remove("active");
+        this.el.sidebar.classList.remove("open");
+        this.closePicker();
+      }
+    });
+  }
+
+  syncModeButtons(){
+    this.el.modeSimple.classList.toggle("active", this.mode==="simple");
+    this.el.modeHoriz.classList.toggle("active", this.mode==="horizontal");
+    this.el.modeVert.classList.toggle("active", this.mode==="vertical");
+  }
+
+  normalizeModeDefaults(){
+    const doc=this.activeDoc();
+    const maxSlots=doc?Math.max(1, this.visiblePageIndices(doc).length):1;
+    if(this.mode==="simple") this.slots=1;
+    else this.slots=clamp(this.slots,1,maxSlots);
+    this.el.inputSlots.value=this.slots;
+    this.ensureSlotCursors();
+    this.ensureSlotZooms();
+  }
+
+  computeGrid(){
+    if(this.mode==="simple") return {cols:1, rows:1};
+    if(this.mode==="horizontal"){
+      const rows=Math.max(1,this.rows);
+      const cols=Math.max(1, Math.ceil(this.slots/rows));
+      return {cols, rows};
+    }
+    const cols=Math.max(1,this.cols);
+    const rows=Math.max(1, Math.ceil(this.slots/cols));
+    return {cols, rows};
+  }
+
+  renderTabs(){
+    this.el.tabs.innerHTML="";
+    for(const d of this.docs){
+      const t=document.createElement("div");
+      t.className="tab"+(d.id===this.activeDocId?" active":"");
+      t.textContent=d.name;
+      t.onclick=()=>{
+        this.activeDocId=d.id;
+        this.activeSlot=0;
+        this.ensureSlotCursors();
+        this.ensureSlotZooms();
+        this.renderTabs();
+        this.renderPagesList();
+        this.normalizeModeDefaults();
+        this.render();
+        this.syncUI();
+      };
+      this.el.tabs.appendChild(t);
+    }
+    this.el.status.textContent=`${this.docs.length} document(s)`;
+  }
+
+  applyRanges(){
+    const doc=this.activeDoc(); if(!doc) return;
+    const ranges=parsePageRanges(this.el.inputRanges.value, doc.pages.length);
+    doc.filter=ranges;
+    this.ensureSlotCursors();
+    this.ensureSlotZooms();
+    this.renderPagesList();
+    this.render();
+  }
+  clearRanges(){
+    const doc=this.activeDoc(); if(!doc) return;
+    doc.filter=null;
+    this.el.inputRanges.value="";
+    this.ensureSlotCursors();
+    this.ensureSlotZooms();
+    this.renderPagesList();
+    this.render();
+  }
+
+  pageMetaLabel(doc, pageIndex){
+    const ref=doc.pages[pageIndex];
+    const src=this.docs.find(d=>d.id===ref.sourceDocId);
+    const srcName=src?src.name:"source ?";
+    const rot=degreesNorm90(doc.globalRotation + ref.rotation);
+    return `source: ${srcName} · p${ref.sourcePageNumber} · rot:${rot}°`;
+  }
+
+  renderPagesList(){
+    const doc=this.activeDoc();
+    this.el.pagesList.innerHTML="";
+    if(!doc) return;
+
+    const visible=this.visiblePageIndices(doc);
+    for(let i=0;i<visible.length;i++){
+      const pageIndex=visible[i];
+      const pageNumber=pageIndex+1;
+      const isSel=doc.selected.has(pageIndex);
+
+      const row=document.createElement("div");
+      row.className="pageItem"+(isSel?" selected":"");
+      row.innerHTML = `
+        <div class="num">Page ${pageNumber}</div>
+        <div class="meta">${this.pageMetaLabel(doc,pageIndex)}</div>
+        <input type="checkbox" ${isSel?"checked":""} />
+      `;
+
+      row.onclick=()=>{
+        this.slotCursor[this.activeSlot]=i;
+        this.ensureSlotCursors();
+        this.ensureSlotZooms();
+        this.render();
+      };
+
+      row.oncontextmenu=(e)=>{
+        e.preventDefault();
+        if(doc.selected.has(pageIndex)) doc.selected.delete(pageIndex);
+        else doc.selected.add(pageIndex);
+        this.syncSelectionPill();
+        this.renderPagesList();
+        this.render();
+      };
+
+      this.el.pagesList.appendChild(row);
+    }
+  }
+
+  /* ===================== Load ===================== */
+  async loadPDFs(){
+    const input=document.createElement("input");
+    input.type="file";
+    input.accept="application/pdf";
+    input.multiple=true;
+    input.onchange=async ()=>{
+      const files=Array.from(input.files||[]);
+      if(!files.length) return;
+
+      for(const file of files){
+        try{
+          let bytes=await readFileAsUint8(file);
+          if(!bytes.length){ alert(`Fichier vide: ${file.name}`); continue; }
+
+          const off=findPdfHeaderOffset(bytes);
+          if(off<0){ alert(`"${file.name}" n'est pas un PDF valide (%PDF- introuvable).`); continue; }
+
+          let pdfjsDoc;
+          try{
+            pdfjsDoc=await pdfjsLib.getDocument({data: bytes}).promise;
+          }catch(e){
+            console.error(e);
+            alert(`PDF.js ne peut pas lire "${file.name}".`);
+            continue;
+          }
+
+          let pdfLibDoc=null;
+          try{
+            const norm=normalizePdfBytes(bytes);
+            pdfLibDoc=(isPdfBytes(norm) ? await PDFLib.PDFDocument.load(norm, {ignoreEncryption:true}) : null);
+          }catch(e){
+            console.warn("PDF-Lib a échoué (édition/export désactivés pour ce fichier).", e);
+            pdfLibDoc=null;
+          }
+
+          const id=crypto.randomUUID();
+          const doc=new DocModel({id,name:file.name,bytes,pdfjsDoc,pdfLibDoc});
+          doc.pdfLibAvailable = !!doc.pdfLibDoc;
+          try{ doc.fingerprint = await sha256Hex(normalizePdfBytes(bytes)); }catch(e){ doc.fingerprint = null; }
+          this.docs.push(doc);
+          if(!this.activeDocId) this.activeDocId=id;
+        }catch(err){
+          console.error(err);
+          alert(`Erreur chargement: ${file.name}`);
+        }
+      }
+
+      this.el.sidebar.classList.remove("open");
+      this.renderTabs();
+      this.normalizeModeDefaults();
+      this.renderPagesList();
+      this.render();
+      this.syncUI();
+    };
+    input.click();
+  }
+
+  async addPDFToActiveDoc(){
+    const active=this.activeDoc();
+    if(!active){ alert("Aucun document actif."); return; }
+
+    const input=document.createElement("input");
+    input.type="file";
+    input.accept="application/pdf";
+    input.onchange=async ()=>{
+      const file=input.files && input.files[0];
+      if(!file) return;
+      try{
+        let bytes=await readFileAsUint8(file);
+        if(!bytes.length){ alert(`Fichier vide: ${file.name}`); return; }
+        const off=findPdfHeaderOffset(bytes);
+        if(off<0){ alert(`"${file.name}" n'est pas un PDF valide.`); return; }
+
+        let pdfjsDoc;
+        try{
+          pdfjsDoc=await pdfjsLib.getDocument({data: bytes}).promise;
+        }catch(e){
+          console.error(e);
+          alert(`PDF.js ne peut pas lire "${file.name}".`);
+          return;
+        }
+
+        let pdfLibDoc=null;
+        try{
+          const norm=normalizePdfBytes(bytes);
+          pdfLibDoc=(isPdfBytes(norm) ? await PDFLib.PDFDocument.load(norm, {ignoreEncryption:true}) : null);
+        }catch(e){
+          console.warn("PDF-Lib a échoué pour ce fichier.", e);
+          pdfLibDoc=null;
+        }
+
+        const id=crypto.randomUUID();
+        const srcDoc=new DocModel({id,name:file.name,bytes,pdfjsDoc,pdfLibDoc});
+        srcDoc.pdfLibAvailable = !!srcDoc.pdfLibDoc;
+        try{ srcDoc.fingerprint = await sha256Hex(normalizePdfBytes(bytes)); }catch(e){ srcDoc.fingerprint = null; }
+        this.docs.push(srcDoc);
+
+        for(let p=1;p<=srcDoc.sourcePageCount;p++){
+          active.pages.push({sourceDocId:srcDoc.id, sourcePageNumber:p, rotation:0});
+        }
+
+        this.renderTabs();
+        this.renderPagesList();
+        this.normalizeModeDefaults();
+        this.render();
+        this.syncUI();
+      }catch(err){
+        console.error(err);
+        alert(`Erreur ajout: ${file.name}`);
+      }
+    };
+    input.click();
+  }
+
+  /* ===================== Annotation helpers ===================== */
+  getPageAnno(doc, pageIndex){
+    const ref=doc.pages[pageIndex];
+    const key=pageKey(doc.id, ref);
+    if(!doc.annotations[key]) doc.annotations[key]={ zones: [] };
+    return { key, ref, anno: doc.annotations[key] };
+  }
+
+  findZone(anno, zoneId){
+    return (anno.zones||[]).find(z=>z.id===zoneId) || null;
+  }
+  findNote(zone, noteId){
+    return (zone?.notes||[]).find(n=>n.id===noteId) || null;
+  }
+
+  /* ===================== Navigation to note ===================== */
+  gotoRef(target, slotIndex=0){
+    // target: {docId, sourceDocId, sourcePageNumber, zoneId, noteId}
+    const doc = this.docs.find(d=>d.id===target.docId);
+    if(!doc){ alert("Document cible introuvable."); return; }
+
+    this.activeDocId = doc.id;
+    this.renderTabs();
+
+    // ensure slots
+    this.normalizeModeDefaults();
+
+    // compute visible list
+    const visible = this.visiblePageIndices(doc);
+    const pageIndex = doc.pages.findIndex(p=>p.sourceDocId===target.sourceDocId && p.sourcePageNumber===target.sourcePageNumber);
+    if(pageIndex<0){ alert("Page cible introuvable dans le document."); return; }
+
+    const cursor = visible.indexOf(pageIndex);
+    if(cursor<0){
+      alert("Page cible non visible (filtre).");
+      return;
+    }
+
+    slotIndex = clamp(slotIndex, 0, this.slots-1);
+    this.activeSlot = slotIndex;
+    this.slotCursor[slotIndex] = cursor;
+
+    // set zone/note selection for slot
+    this.activeZoneBySlot[slotIndex] = target.zoneId || "";
+    this.activeNoteBySlot[slotIndex] = target.noteId || "";
+
+    this.renderPagesList();
+    this.render();
+  }
+
+  /* ===================== Render helpers (scroll preserve) ===================== */
+  saveSlotScroll(){
+    const wraps = this.el.viewer.querySelectorAll('[data-slot-wrap]');
+    wraps.forEach(w => {
+      const s = parseInt(w.getAttribute('data-slot-wrap'), 10);
+      if(Number.isFinite(s)) this.slotScroll[s] = { left: w.scrollLeft, top: w.scrollTop };
+    });
+  }
+  restoreSlotScroll(){
+    const wraps = this.el.viewer.querySelectorAll('[data-slot-wrap]');
+    wraps.forEach(w => {
+      const s = parseInt(w.getAttribute('data-slot-wrap'), 10);
+      const st = this.slotScroll[s];
+      if(st){ w.scrollLeft = st.left || 0; w.scrollTop = st.top || 0; }
+    });
+  }
+
+  /* ===================== Render ===================== */
+  async render(){
+    const doc=this.activeDoc();
+    this.syncUI();
+
+    if(!doc){
+      this.el.empty.style.display="block";
+      this.el.viewer.innerHTML="";
+      this.el.docInfo.textContent="—";
+      return;
+    }
+
+    const visible=this.visiblePageIndices(doc);
+    this.el.docInfo.textContent=`${doc.name} · ${doc.pages.length} page(s) · visibles: ${visible.length}`;
+
+    if(!visible.length){
+      this.el.viewer.innerHTML=`<div class="empty">Aucune page visible (filtre vide).</div>`;
+      return;
+    }
+
+    if(this.mode==="simple") this.slots=1;
+    else this.slots=clamp(this.slots, 1, visible.length);
+
+    this.el.inputSlots.value=this.slots;
+    this.ensureSlotCursors();
+    this.ensureSlotZooms();
+    this.el.empty.style.display="none";
+
+    // save scroll before replace
+    this.saveSlotScroll();
+
+    const token=++this.renderToken;
+
+    const {cols}=this.computeGrid();
+    const grid=document.createElement("div");
+    grid.className="grid";
+    grid.style.gridTemplateColumns=`repeat(${cols}, minmax(0, 1fr))`;
+
+    for(let s=0;s<this.slots;s++){
+      const pageIndex=visible[this.slotCursor[s]];
+      const pageNumber=pageIndex+1;
+      const ref=doc.pages[pageIndex];
+
+      const slot=document.createElement("div");
+      slot.className="slot"+(s===this.activeSlot?" active":"")+(this.selectedSlots.has(s)?" sel":"");
+      slot.onclick=(ev)=>{
+        const tag=(ev.target && ev.target.tagName)||"";
+        if(["BUTTON","INPUT","SELECT","TEXTAREA","LABEL"].includes(tag)) return;
+        if(ev.ctrlKey || ev.metaKey){
+          if(this.selectedSlots.has(s)) this.selectedSlots.delete(s); else this.selectedSlots.add(s);
+          this.activeSlot=s;
+          this.render();
+          return;
+        }
+        this.selectedSlots.clear();
+        this.activeSlot=s;
+        this.render();
+      };
+
+      // slot head
+      const slotHead=document.createElement("div");
+      slotHead.className="slotHead";
+      slotHead.innerHTML=`
+        <div class="left">
+          <div class="t">Slot ${s+1} · Page ${pageNumber}</div>
+          <div class="s">${this.pageMetaLabel(doc,pageIndex)}</div>
+        </div>
+        <div class="actions">
+          <button class="btn" data-act="prev">◀</button>
+          <button class="btn" data-act="next">▶</button>
+
+          <span class="zoomCtl" title="Zoom du slot (éditable)">
+            <button class="btnTiny" data-act="slotZoomMinus" title="Zoom -">−</button>
+            <input data-act="slotZoomPct" value="${Math.round((this.slotZooms[s]||1)*100)}%" />
+            <button class="btnTiny" data-act="slotZoomPlus" title="Zoom +">+</button>
+            <button class="btn" data-act="resetSlotZoom" title="Reset zoom">Reset Z</button>
+            <button class="btn" data-act="resetSlotRot" title="Reset rotation">Reset Rot</button>
+          </span>
+
+          <button class="btn" data-act="toggleSel">${doc.selected.has(pageIndex)?"Désélection":"Sélection"}</button>
+          <button class="btn" data-act="rotL" title="Rotation page (persistante)">↺</button>
+          <button class="btn" data-act="rotR" title="Rotation page (persistante)">↻</button>
+        </div>
+      `;
+
+      // actions prev/next
+      slotHead.querySelector('[data-act="prev"]').onclick=(e)=>{ e.stopPropagation();
+        this.slotCursor[s]=clamp(this.slotCursor[s]-1, 0, visible.length-1);
+        this.render();
+      };
+      slotHead.querySelector('[data-act="next"]').onclick=(e)=>{ e.stopPropagation();
+        this.slotCursor[s]=clamp(this.slotCursor[s]+1, 0, visible.length-1);
+        this.render();
+      };
+
+      // selection
+      slotHead.querySelector('[data-act="toggleSel"]').onclick=(e)=>{ e.stopPropagation();
+        if(doc.selected.has(pageIndex)) doc.selected.delete(pageIndex);
+        else doc.selected.add(pageIndex);
+        this.syncSelectionPill();
+        this.renderPagesList();
+        this.render();
+      };
+
+      // rotations
+      slotHead.querySelector('[data-act="rotL"]').onclick=(e)=>{ e.stopPropagation();
+        ref.rotation=degreesNorm90(ref.rotation-90);
+        this.renderPagesList();
+        this.render();
+      };
+      slotHead.querySelector('[data-act="rotR"]').onclick=(e)=>{ e.stopPropagation();
+        ref.rotation=degreesNorm90(ref.rotation+90);
+        this.renderPagesList();
+        this.render();
+      };
+
+      // slot zoom control
+      const zoomInput = slotHead.querySelector('[data-act="slotZoomPct"]');
+      const applySlotZoom = (val)=>{
+        const pct = clamp(val, 25, 500);
+        this.slotZooms[s]=pct/100;
+        zoomInput.value = `${Math.round(pct)}%`;
+        this.render();
+      };
+      slotHead.querySelector('[data-act="slotZoomMinus"]').onclick=(e)=>{ e.stopPropagation();
+        applySlotZoom(Math.round(((this.slotZooms[s]||1)*100) - 10));
+      };
+      slotHead.querySelector('[data-act="slotZoomPlus"]').onclick=(e)=>{ e.stopPropagation();
+        applySlotZoom(Math.round(((this.slotZooms[s]||1)*100) + 10));
+      };
+      zoomInput.onkeydown=(e)=>{
+        if(e.key==="Enter"){ e.preventDefault(); zoomInput.blur(); }
+      };
+      zoomInput.onblur=()=>{
+        const raw=(zoomInput.value||"").replace("%","").trim();
+        const num=parseInt(raw,10);
+        if(Number.isFinite(num)) applySlotZoom(num);
+        else zoomInput.value = `${Math.round((this.slotZooms[s]||1)*100)}%`;
+      };
+      slotHead.querySelector('[data-act="resetSlotZoom"]').onclick=(e)=>{ e.stopPropagation();
+        this.slotZooms[s]=1.0;
+        this.render();
+      };
+      slotHead.querySelector('[data-act="resetSlotRot"]').onclick=(e)=>{ e.stopPropagation();
+        ref.rotation=0;
+        this.renderPagesList();
+        this.render();
+      };
+
+      // canvas wrap
+      const wrap=document.createElement("div");
+      wrap.className="canvasWrap";
+      wrap.setAttribute("data-slot-wrap", String(s));
+      const sz=this.slotSizes[s] || {w:this.slotDefaultW, h:this.slotDefaultH};
+      wrap.style.width = (sz.w + 10) + "px";
+      wrap.style.height = (sz.h + 10) + "px";
+
+      const layer=document.createElement("div");
+      layer.className="pageLayer";
+      const canvas=document.createElement("canvas");
+      const overlay=document.createElement("div");
+      overlay.className="overlay";
+      layer.appendChild(canvas);
+      layer.appendChild(overlay);
+      wrap.appendChild(layer);
+
+      // slot footer (zones list + notes)
+      const foot=document.createElement("div");
+      foot.className="slotFoot";
+
+      const { anno } = this.getPageAnno(doc, pageIndex);
+
+      const zonesHeader=document.createElement("div");
+      zonesHeader.className="zonesHeader";
+      zonesHeader.innerHTML = `
+        <div class="muted">Zones (page ${pageNumber}) · ${anno.zones.length}</div>
+        <div class="row" style="max-width:300px;gap:6px">
+          <button class="btn" data-act="clearZones">Clear</button>
+          <button class="btn warn" data-act="toggleZone">${this.zoneEnabled && s===this.activeSlot ? "Zone: ON" : "Zone: OFF"}</button>
+        </div>
+      `;
+      zonesHeader.querySelector('[data-act="toggleZone"]').onclick=(e)=>{
+        e.stopPropagation();
+        this.zoneEnabled=!this.zoneEnabled;
+        this.el.btnZoneToggle.textContent=this.zoneEnabled?"Zones: ON":"Zones: OFF";
+        this.render();
+      };
+      zonesHeader.querySelector('[data-act="clearZones"]').onclick=(e)=>{
+        e.stopPropagation();
+        if(!confirm("Supprimer toutes les zones de cette page ?")) return;
+        anno.zones = [];
+        this.activeZoneBySlot[s] = "";
+        this.activeNoteBySlot[s] = "";
+        this.render();
+      };
+
+      const zonesList=document.createElement("div");
+      zonesList.className="zonesList";
+
+      const noteBox=document.createElement("div");
+      noteBox.className="noteBox";
+
+      const renderZoneListUI = ()=>{
+        zonesList.innerHTML="";
+        if(!anno.zones.length){
+          zonesList.innerHTML = `<div class="small" style="padding:6px;color:var(--muted)">Aucune zone.</div>`;
+        }else{
+          for(const z of anno.zones){
+            const item=document.createElement("div");
+            item.className="zoneItem"+(z.id===this.activeZoneBySlot[s]?" active":"");
+            const lastNote = z.notes && z.notes.length ? z.notes[z.notes.length-1] : null;
+            item.innerHTML = `
+              <div class="left">
+                <div class="zid">${z.id}</div>
+                <div class="meta">${lastNote ? ("Dernière note: " + new Date(lastNote.ts).toLocaleString()) : "Aucune note"}</div>
+              </div>
+              <div class="right">
+                <span class="tag">${(z.notes?.length||0)} note(s)</span>
+                <button class="btn" data-act="del">✕</button>
+              </div>
+            `;
+            item.onclick=(e)=>{
+              const t=e.target;
+              if(t instanceof HTMLElement && t.getAttribute("data-act")==="del") return;
+              this.activeZoneBySlot[s]=z.id;
+
+              // pick note version: keep existing choice if still present, else last
+              const wanted=this.activeNoteBySlot[s] || "";
+              const exists = wanted && (z.notes||[]).some(n=>n.id===wanted);
+              if(!exists){
+                const last = (z.notes && z.notes.length) ? z.notes[z.notes.length-1].id : "";
+                this.activeNoteBySlot[s] = last;
+              }
+              this.render();
+            };
+            item.querySelector('[data-act="del"]').onclick=(e)=>{
+              e.stopPropagation();
+              if(!confirm("Supprimer cette zone ? (notes incluses)")) return;
+              // delete all links referencing this zone
+              this.links = this.links.filter(L => !(this.refEqualsZone(L.from, {docId:doc.id, sourceDocId:ref.sourceDocId, sourcePageNumber:ref.sourcePageNumber, zoneId:z.id}) ||
+                                                 this.refEqualsZone(L.to,   {docId:doc.id, sourceDocId:ref.sourceDocId, sourcePageNumber:ref.sourcePageNumber, zoneId:z.id})));
+              anno.zones = anno.zones.filter(x=>x.id!==z.id);
+              if(this.activeZoneBySlot[s]===z.id){ this.activeZoneBySlot[s]=""; this.activeNoteBySlot[s]=""; }
+              this.render();
+            };
+            zonesList.appendChild(item);
+          }
+        }
+
+        // note box refresh
+        noteBox.innerHTML="";
+        const selZoneId=this.activeZoneBySlot[s]||"";
+        const z=selZoneId ? this.findZone(anno, selZoneId) : null;
+
+        // top row: zone + note selector
+        const top=document.createElement("div");
+        top.className="noteTop";
+
+        const p1=document.createElement("span");
+        p1.className="pillMini";
+        p1.innerHTML = `Zone: <b>${z?z.id:"—"}</b>`;
+        const p2=document.createElement("span");
+        p2.className="pillMini";
+        p2.innerHTML = `Notes: <b>${z?(z.notes?.length||0):0}</b>`;
+
+        const sel=document.createElement("select");
+        sel.disabled = !z;
+        sel.title="Choisir la version de note à afficher";
+        if(z && z.notes && z.notes.length){
+          // options newest first
+          const notes=[...z.notes].sort((a,b)=>b.ts-a.ts);
+          const chosen=this.activeNoteBySlot[s] || notes[0].id;
+          this.activeNoteBySlot[s]=chosen;
+
+          for(const n of notes){
+            const opt=document.createElement("option");
+            opt.value=n.id;
+            opt.textContent = `${new Date(n.ts).toLocaleString()} · ${n.id}`;
+            if(n.id===chosen) opt.selected=true;
+            sel.appendChild(opt);
+          }
+        }else{
+          const opt=document.createElement("option");
+          opt.value="";
+          opt.textContent="—";
+          sel.appendChild(opt);
+          this.activeNoteBySlot[s]="";
+        }
+
+        sel.onchange=()=>{
+          this.activeNoteBySlot[s]=sel.value||"";
+          this.render();
+        };
+
+        top.appendChild(p1);
+        top.appendChild(p2);
+        top.appendChild(sel);
+        noteBox.appendChild(top);
+
+        const note = (z && this.activeNoteBySlot[s]) ? this.findNote(z, this.activeNoteBySlot[s]) : null;
+
+        const meta=document.createElement("div");
+        meta.className="noteRow";
+        meta.innerHTML = `
+          <span class="pillMini">Note: <b>${note?note.id:"—"}</b></span>
+          <span class="pillMini">Date: <b>${note?new Date(note.ts).toLocaleString():"—"}</b></span>
+        `;
+        noteBox.appendChild(meta);
+
+        const ta=document.createElement("textarea");
+        ta.placeholder = z ? "Écrire une note pour la zone…" : "Sélectionne une zone pour écrire une note…";
+        ta.disabled = !z;
+        ta.value = note ? (note.text||"") : "";
+        ta.addEventListener('click', (ev)=>ev.stopPropagation());
+        ta.addEventListener('pointerdown', (ev)=>ev.stopPropagation());
+        noteBox.appendChild(ta);
+
+        const actions=document.createElement("div");
+        actions.className="noteRow";
+        actions.innerHTML = `
+          <button class="miniBtn" data-act="saveNote" ${z && note ? "" : "disabled"} title="Sauver (modifie la note sélectionnée)">Save</button>
+          <button class="miniBtn" data-act="addNote" ${z ? "" : "disabled"} title="Ajouter une nouvelle note (nouvelle version)">+ Note</button>
+          <button class="miniBtn" data-act="dupNote" ${z && note ? "" : "disabled"} title="Dupliquer la note sélectionnée en nouvelle note">Dup</button>
+          <button class="miniBtn" data-act="delNote" ${z && note ? "" : "disabled"} title="Supprimer la note sélectionnée">Del</button>
+          <button class="miniBtn" data-act="copyNote" ${z && note ? "" : "disabled"}>Copy</button>
+          <button class="miniBtn" data-act="linkFrom" ${z && note ? "" : "disabled"} title="Créer un lien depuis cette note">Link →</button>
+        `;
+        const q=(a)=>actions.querySelector(`[data-act="${a}"]`);
+        q("saveNote").onclick=(e)=>{
+          e.stopPropagation();
+          if(!z || !note) return;
+          note.text = ta.value || "";
+          note.ts = Date.now();
+          this.render();
+        };
+        q("addNote").onclick=(e)=>{
+          e.stopPropagation();
+          if(!z) return;
+          if(!z.notes) z.notes=[];
+          const nn={id:genId("n"), ts:Date.now(), text: ta.value || ""};
+          z.notes.push(nn);
+          this.activeNoteBySlot[s]=nn.id;
+          this.render();
+        };
+        q("dupNote").onclick=(e)=>{
+          e.stopPropagation();
+          if(!z || !note) return;
+          if(!z.notes) z.notes=[];
+          const nn={id:genId("n"), ts:Date.now(), text: note.text || ""};
+          z.notes.push(nn);
+          this.activeNoteBySlot[s]=nn.id;
+          this.render();
+        };
+        q("delNote").onclick=(e)=>{
+          e.stopPropagation();
+          if(!z || !note) return;
+          if(!confirm("Supprimer cette note ?")) return;
+          // remove links referencing this noteId
+          this.links = this.links.filter(L => (L.from.noteId!==note.id) && (L.to.noteId!==note.id));
+          z.notes = (z.notes||[]).filter(n=>n.id!==note.id);
+          const last = (z.notes && z.notes.length) ? z.notes[z.notes.length-1].id : "";
+          this.activeNoteBySlot[s]=last;
+          this.render();
+        };
+        q("copyNote").onclick=async (e)=>{
+          e.stopPropagation();
+          if(!note) return;
+          try{ await navigator.clipboard.writeText(note.text||""); }catch(_){}
+        };
+        q("linkFrom").onclick=(e)=>{
+          e.stopPropagation();
+          if(!z || !note) return;
+          const from = {
+            docId: doc.id,
+            sourceDocId: ref.sourceDocId,
+            sourcePageNumber: ref.sourcePageNumber,
+            zoneId: z.id,
+            noteId: note.id
+          };
+          this.pendingLinkFrom = from;
+          this.openPicker("linkTarget");
+        };
+        noteBox.appendChild(actions);
+
+        // Links box for selected note
+        const linksBox=document.createElement("div");
+        linksBox.className="linksBox";
+        const outLinks = note ? this.links.filter(L=>L.from.noteId===note.id) : [];
+        const inLinks  = note ? this.links.filter(L=>L.to.noteId===note.id) : [];
+
+        linksBox.innerHTML = `
+          <div class="hdr">
+            <div>Liens (sortants: <b>${outLinks.length}</b> · entrants: <b>${inLinks.length}</b>)</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="miniBtn" data-act="addLink" ${note ? "" : "disabled"}>+ Lien</button>
+            </div>
+          </div>
+          <div class="linksList" data-box="list"></div>
+        `;
+        const addBtn = linksBox.querySelector('[data-act="addLink"]');
+        addBtn.onclick=(e)=>{
+          e.stopPropagation();
+          if(!z || !note) return;
+          this.pendingLinkFrom = {
+            docId: doc.id, sourceDocId: ref.sourceDocId, sourcePageNumber: ref.sourcePageNumber, zoneId: z.id, noteId: note.id
+          };
+          this.openPicker("linkTarget");
+        };
+
+        const list = linksBox.querySelector('[data-box="list"]');
+
+        const addLinkItem = (L, kind)=>{
+          const tgt = (kind==="out") ? L.to : L.from;
+          const label = L.label ? ` · ${L.label}` : "";
+          const it=document.createElement("div");
+          it.className="linkItem";
+          it.innerHTML = `
+            <div class="left">
+              <div class="t">${kind==="out" ? "→" : "←"} ${tgt.noteId} (${tgt.zoneId})${label}</div>
+              <div class="s">${this.refToString(tgt)}</div>
+            </div>
+            <div class="right">
+              <button class="miniBtn" data-act="go">Go</button>
+              <button class="miniBtn" data-act="del">Del</button>
+            </div>
+          `;
+          it.querySelector('[data-act="go"]').onclick=(e)=>{
+            e.stopPropagation();
+            const slotRaw = prompt("Ouvrir dans quel slot ? (1..n)", String(this.activeSlot+1));
+            const slotIdx = clamp((parseInt(slotRaw||"",10)||1)-1, 0, this.slots-1);
+            this.gotoRef(tgt, slotIdx);
+          };
+          it.querySelector('[data-act="del"]').onclick=(e)=>{
+            e.stopPropagation();
+            if(!confirm("Supprimer ce lien ?")) return;
+            this.links = this.links.filter(x=>x.id!==L.id);
+            this.render();
+          };
+          list.appendChild(it);
+        };
+
+        if(!note){
+          list.innerHTML = `<div class="small" style="padding:6px;color:var(--muted)">Sélectionne une note pour voir/ajouter des liens.</div>`;
+        }else{
+          if(!outLinks.length && !inLinks.length){
+            list.innerHTML = `<div class="small" style="padding:6px;color:var(--muted)">Aucun lien.</div>`;
+          }else{
+            for(const L of outLinks) addLinkItem(L, "out");
+            for(const L of inLinks) addLinkItem(L, "in");
+          }
+        }
+
+        noteBox.appendChild(linksBox);
+      };
+
+      // initial list
+      renderZoneListUI();
+
+      foot.appendChild(zonesHeader);
+      foot.appendChild(zonesList);
+      foot.appendChild(noteBox);
+
+      // assemble slot
+      slot.appendChild(slotHead);
+      slot.appendChild(wrap);
+      slot.appendChild(foot);
+      grid.appendChild(slot);
+
+      // zone creation: ONLY if enabled AND slot is active
+      // Key fix drift: DO NOT add wrap.scrollLeft/Top because overlay moves with scroll already.
+      if(this.zoneEnabled && s===this.activeSlot){
+        overlay.style.pointerEvents="auto";
+
+        let drag=false;
+        let start=null;
+        let tempBox=null;
+
+        const ensureTemp = ()=>{
+          if(tempBox) return tempBox;
+          tempBox=document.createElement("div");
+          tempBox.className="zoneBox active";
+          const lbl=document.createElement("div");
+          lbl.className="zoneLabel";
+          lbl.textContent="NEW";
+          tempBox.appendChild(lbl);
+          overlay.appendChild(tempBox);
+          return tempBox;
+        };
+
+        const getOverlaySize = ()=>{
+          const w=parseFloat(canvas.style.width)||canvas.getBoundingClientRect().width||1;
+          const h=parseFloat(canvas.style.height)||canvas.getBoundingClientRect().height||1;
+          return {w, h};
+        };
+
+        overlay.onpointerdown=(ev)=>{
+          ev.preventDefault();
+          const r=overlay.getBoundingClientRect();
+          const x = (ev.clientX - r.left);
+          const y = (ev.clientY - r.top);
+          const {w,h}=getOverlaySize();
+          start={x,y,w,h};
+          drag=true;
+          const box=ensureTemp();
+          box.style.left = `${x}px`;
+          box.style.top = `${y}px`;
+          box.style.width = `1px`;
+          box.style.height = `1px`;
+        };
+        overlay.onpointermove=(ev)=>{
+          if(!drag || !start) return;
+          const r=overlay.getBoundingClientRect();
+          const cx=(ev.clientX - r.left);
+          const cy=(ev.clientY - r.top);
+          const x=Math.min(start.x,cx);
+          const y=Math.min(start.y,cy);
+          const w=Math.abs(cx-start.x);
+          const h=Math.abs(cy-start.y);
+          const box=ensureTemp();
+          box.style.left = `${x}px`;
+          box.style.top = `${y}px`;
+          box.style.width = `${w}px`;
+          box.style.height = `${h}px`;
+        };
+        overlay.onpointerup=(ev)=>{
+          if(!drag || !start) return;
+          drag=false;
+
+          const box=tempBox;
+          tempBox=null;
+
+          const rect = box.getBoundingClientRect();
+          const orect = overlay.getBoundingClientRect();
+          const {w:ow, h:oh}=getOverlaySize();
+
+          const x = (rect.left - orect.left);
+          const y = (rect.top - orect.top);
+          const ww = rect.width;
+          const hh = rect.height;
+
+          box.remove();
+
+          // minimum size
+          if(ww < 10 || hh < 10){
+            this.render();
+            return;
+          }
+
+          const nx = clamp(x/ow, 0, 1);
+          const ny = clamp(y/oh, 0, 1);
+          const nw = clamp(ww/ow, 0, 1);
+          const nh = clamp(hh/oh, 0, 1);
+
+          const zone = { id: genId("z"), createdAt: nowIso(), rect:{x:nx,y:ny,w:nw,h:nh}, notes:[] };
+          anno.zones.push(zone);
+          this.activeZoneBySlot[s]=zone.id;
+          this.activeNoteBySlot[s]="";
+          this.render();
+        };
+      }else{
+        overlay.style.pointerEvents="none";
+        overlay.onpointerdown=null;
+        overlay.onpointermove=null;
+        overlay.onpointerup=null;
+      }
+
+      // render page + render zones overlay (after page render)
+      (async ()=>{
+        try{
+          const srcDoc=this.docs.find(d=>d.id===ref.sourceDocId);
+          if(!srcDoc) return;
+
+          const page=await srcDoc.pdfjsDoc.getPage(ref.sourcePageNumber);
+          const rot=degreesNorm90(doc.globalRotation + ref.rotation);
+
+          const slotZoom=this.slotZooms[s] ?? 1.0;
+          const scale = this.globalZoom * slotZoom;
+
+          const viewport=page.getViewport({scale, rotation: rot});
+
+          const dpr=window.devicePixelRatio||1;
+          canvas.width=Math.floor(viewport.width*dpr);
+          canvas.height=Math.floor(viewport.height*dpr);
+          canvas.style.width=`${viewport.width}px`;
+          canvas.style.height=`${viewport.height}px`;
+
+          // size layer & overlay to canvas css size
+          layer.style.width = `${viewport.width}px`;
+          layer.style.height = `${viewport.height}px`;
+          overlay.style.width = `${viewport.width}px`;
+          overlay.style.height = `${viewport.height}px`;
+
+          const ctx=canvas.getContext("2d");
+          ctx.setTransform(dpr,0,0,dpr,0,0);
+
+          if(token!==this.renderToken) return;
+          await page.render({canvasContext: ctx, viewport}).promise;
+
+          if(token!==this.renderToken) return;
+
+          // render existing zones as divs (clear first)
+          Array.from(overlay.querySelectorAll(".zoneBox")).forEach(n=>n.remove());
+
+          const pageAnno = this.getPageAnno(doc, pageIndex).anno;
+          const zones = pageAnno.zones || [];
+          // Visibility: show zones only when global Zones ON and per-slot zones ON.
+          const showZones = !!this.zoneEnabled && (this.slotShowZones[s] ?? true);
+          if(!showZones){
+            return;
+          }
+          for(const z of zones){
+            const box=document.createElement("div");
+            box.className="zoneBox" + (z.id === (this.activeZoneBySlot[s]||"") ? " active" : "");
+            const lbl=document.createElement("div");
+            lbl.className="zoneLabel";
+            lbl.textContent=z.id;
+            box.appendChild(lbl);
+
+            box.style.left = `${z.rect.x * viewport.width}px`;
+            box.style.top = `${z.rect.y * viewport.height}px`;
+            box.style.width = `${z.rect.w * viewport.width}px`;
+            box.style.height = `${z.rect.h * viewport.height}px`;
+
+            box.onclick=(ev)=>{
+              ev.stopPropagation();
+              this.activeSlot=s;
+              this.activeZoneBySlot[s]=z.id;
+
+              const wanted=this.activeNoteBySlot[s] || "";
+              const exists = wanted && (z.notes||[]).some(n=>n.id===wanted);
+              if(!exists){
+                const last = (z.notes && z.notes.length) ? z.notes[z.notes.length-1].id : "";
+                this.activeNoteBySlot[s] = last;
+              }
+
+              this.render();
+            };
+
+            overlay.appendChild(box);
+          }
+
+        }catch(err){
+          console.error(err);
+        }
+      })();
+    }
+
+    this.el.viewer.innerHTML="";
+    const wrap=document.createElement('div');
+    wrap.className='gridWrap';
+    // Render zoom applies to layout (slots), not to page rendering.
+    wrap.style.transform = `scale(${this.renderZoom || 1})`;
+    wrap.appendChild(grid);
+    this.el.viewer.appendChild(wrap);
+
+    requestAnimationFrame(()=>this.restoreSlotScroll());
+  }
+
+  /* ===================== Links helpers ===================== */
+  refEqualsZone(ref, zoneRef){
+    return ref.docId===zoneRef.docId &&
+           ref.sourceDocId===zoneRef.sourceDocId &&
+           ref.sourcePageNumber===zoneRef.sourcePageNumber &&
+           ref.zoneId===zoneRef.zoneId;
+  }
+  refToString(ref){
+    const doc=this.docs.find(d=>d.id===ref.docId);
+    const docName=doc?doc.name:"doc?";
+    return `${docName} · src:${ref.sourceDocId.slice(0,8)}… · p${ref.sourcePageNumber}`;
+  }
+
+  /* ===================== Notes enumeration + picker ===================== */
+  enumerateNotes(){
+    const items=[];
+    for(const d of this.docs){
+      for(const [k,v] of Object.entries(d.annotations||{})){
+        const zones=(v && v.zones) ? v.zones : [];
+        // key format: docId::sourceDocId::sourcePageNumber
+        const parts=k.split("::");
+        const sourceDocId=parts[1]||"";
+        const sourcePageNumber=parseInt(parts[2]||"0",10)||0;
+
+        for(const z of zones){
+          const notes=(z.notes||[]);
+          for(const n of notes){
+            items.push({
+              docId:d.id,
+              docName:d.name,
+              sourceDocId,
+              sourcePageNumber,
+              zoneId:z.id,
+              noteId:n.id,
+              ts:n.ts,
+              text:n.text||""
+            });
+          }
+        }
+      }
+    }
+    // newest first
+    items.sort((a,b)=> (b.ts||0) - (a.ts||0));
+    return items;
+  }
+
+  openPicker(mode){
+    this.pickerMode=mode; // 'notes' | 'linkTarget'
+    this.el.modalTitle.textContent = (mode==="notes") ? "Toutes les notes" : "Choisir une note cible";
+    this.el.modal.classList.add("active");
+    this.el.modal.setAttribute("aria-hidden","false");
+    this.el.modalSearch.value="";
+    this.renderPickerList();
+  }
+  closePicker(){
+    this.el.modal.classList.remove("active");
+    this.el.modal.setAttribute("aria-hidden","true");
+    this.pendingLinkFrom=null;
+  }
+  renderPickerList(){
+    const q=(this.el.modalSearch.value||"").toLowerCase().trim();
+    const items=this.enumerateNotes().filter(it=>{
+      if(!q) return true;
+      return (it.docName||"").toLowerCase().includes(q) ||
+             (it.zoneId||"").toLowerCase().includes(q) ||
+             (it.noteId||"").toLowerCase().includes(q) ||
+             String(it.sourcePageNumber||"").includes(q) ||
+             (it.text||"").toLowerCase().includes(q);
+    });
+
+    this.el.modalList.innerHTML="";
+    if(!items.length){
+      this.el.modalList.innerHTML = `<div class="small" style="color:var(--muted)">Aucune note.</div>`;
+      return;
+    }
+
+    for(const it of items){
+      const card=document.createElement("div");
+      card.className="notePickItem";
+      const when = it.ts ? new Date(it.ts).toLocaleString() : "—";
+      card.innerHTML = `
+        <div class="top">
+          <div class="id">${it.noteId}</div>
+          <div class="meta">${it.docName} · p${it.sourcePageNumber} · zone ${it.zoneId} · ${when}</div>
+        </div>
+        <div class="prev">${short(it.text, 220)}</div>
+      `;
+      card.onclick=()=>{
+        if(this.pickerMode==="notes"){
+          const slotRaw = prompt("Ouvrir dans quel slot ? (1..n)", String(this.activeSlot+1));
+          const slotIdx = clamp((parseInt(slotRaw||"",10)||1)-1, 0, this.slots-1);
+          this.gotoRef({
+            docId: it.docId,
+            sourceDocId: it.sourceDocId,
+            sourcePageNumber: it.sourcePageNumber,
+            zoneId: it.zoneId,
+            noteId: it.noteId
+          }, slotIdx);
+          this.closePicker();
+          return;
+        }
+
+        if(this.pickerMode==="linkTarget"){
+          if(!this.pendingLinkFrom){
+            alert("Aucune note source sélectionnée pour créer un lien.");
+            return;
+          }
+          const to = {
+            docId: it.docId,
+            sourceDocId: it.sourceDocId,
+            sourcePageNumber: it.sourcePageNumber,
+            zoneId: it.zoneId,
+            noteId: it.noteId
+          };
+          const label = prompt("Label du lien (optionnel) :", "") || "";
+          this.links.push({
+            id: genId("L"),
+            createdAt: nowIso(),
+            label: label.trim(),
+            from: this.pendingLinkFrom,
+            to
+          });
+          this.closePicker();
+          this.render();
+        }
+      };
+      this.el.modalList.appendChild(card);
+    }
+  }
+
+  startLinkFromActiveNote(){
+    // helper: from current active slot/zone/note
+    const doc=this.activeDoc(); if(!doc){ alert("Aucun document."); return; }
+    const visible=this.visiblePageIndices(doc);
+    if(!visible.length){ alert("Aucune page visible."); return; }
+    const s=this.activeSlot;
+    const pageIndex=visible[this.slotCursor[s]];
+    const { anno, ref } = this.getPageAnno(doc, pageIndex);
+
+    const zid=this.activeZoneBySlot[s]||"";
+    const z=zid ? this.findZone(anno, zid) : null;
+    if(!z){ alert("Sélectionne une zone."); return; }
+    const nid=this.activeNoteBySlot[s]||"";
+    const n=nid ? this.findNote(z, nid) : null;
+    if(!n){ alert("Sélectionne une note (version)."); return; }
+
+    this.pendingLinkFrom = {
+      docId: doc.id,
+      sourceDocId: ref.sourceDocId,
+      sourcePageNumber: ref.sourcePageNumber,
+      zoneId: z.id,
+      noteId: n.id
+    };
+    this.openPicker("linkTarget");
+  }
+
+  /* ===================== Export / Import notes ===================== */
+  exportNotesJSON(){
+    const payload={
+      schema:"pdf-manager-notes",
+      schemaVersion:2,
+      appVersion:"v10",
+      exportedAt: nowIso(),
+      docs: this.docs.map(d=>({
+        id: d.id,
+        name: d.name,
+        fingerprint: d.fingerprint,
+        annotations: d.annotations || {}
+      })),
+      links: (this.links || []).map(L=>this.linkToPortable(L))
+    };
+    const text=JSON.stringify(payload, null, 2);
+    downloadText(text, `notes_session_${new Date().toISOString().slice(0,10)}.json`);
+  }
+
+  async importNotesJSON(){
+    const input=document.createElement("input");
+    input.type="file";
+    input.accept="application/json";
+    input.onchange=async ()=>{
+      const file=input.files && input.files[0];
+      if(!file) return;
+      try{
+        const txt=await file.text();
+        const data=JSON.parse(txt);
+
+        if(!data || data.schema!=="pdf-manager-notes"){
+          alert("JSON non reconnu (schema).");
+          return;
+        }
+
+        const currentDocs = this.docs || [];
+        const byId = new Map(currentDocs.map(d=>[d.id,d]));
+        const byFp = new Map(currentDocs.filter(d=>d.fingerprint).map(d=>[d.fingerprint,d]));
+        const byName = new Map(currentDocs.map(d=>[d.name,d]));
+
+        const importedDocs = data.docs || [];
+        const importedById = new Map(importedDocs.map(d=>[d.id,d]));
+        const importedByFp = new Map(importedDocs.filter(d=>d.fingerprint).map(d=>[d.fingerprint,d]));
+
+        // Map imported docId -> current docId (via fingerprint, fallback name)
+        const idMap = new Map();
+        for(const idoc of importedDocs){
+          let cur=null;
+          if(idoc.fingerprint && byFp.has(idoc.fingerprint)) cur=byFp.get(idoc.fingerprint);
+          if(!cur && idoc.name && byName.has(idoc.name)) cur=byName.get(idoc.name);
+          if(cur) idMap.set(idoc.id, cur.id);
+        }
+
+        // Merge annotations: remap keys docId/sourceDocId to current ids using idMap
+        for(const idoc of importedDocs){
+          const curId = (idoc.fingerprint && byFp.has(idoc.fingerprint)) ? byFp.get(idoc.fingerprint).id
+                       : (idoc.name && byName.has(idoc.name)) ? byName.get(idoc.name).id
+                       : null;
+          if(!curId) continue;
+          const curDoc = byId.get(curId);
+          const ann = idoc.annotations || {};
+          const remapped = {};
+          for(const [k,v] of Object.entries(ann)){
+            // expected: docId::sourceDocId::page
+            const parts = String(k).split("::");
+            if(parts.length>=3){
+              const impDocId = parts[0];
+              const impSrcId = parts[1];
+              const page = parts[2];
+              const newDocId = idMap.get(impDocId) || curId; // doc container
+              const newSrcId = idMap.get(impSrcId) || impSrcId; // source doc mapping
+              const nk = `${newDocId}::${newSrcId}::${page}`;
+              remapped[nk] = v;
+            }else{
+              // unknown key format, keep as-is
+              remapped[k]=v;
+            }
+          }
+          curDoc.annotations = this.mergeAnnotations(curDoc.annotations||{}, remapped);
+        }
+
+        // Merge links: remap from/to docId/sourceDocId; support portable fingerprints
+        const existing=new Set((this.links||[]).map(L=>L.id));
+        const importedLinks = data.links || [];
+        for(const Lraw of importedLinks){
+          if(!Lraw || !Lraw.id || existing.has(Lraw.id)) continue;
+
+          const L = structuredClone(Lraw);
+
+          // remap endpoints by fingerprint if possible
+          const remapEnd = (end)=>{
+            if(!end) return end;
+            let docId = end.docId;
+            let srcId = end.sourceDocId;
+
+            // fingerprint-based remap (preferred)
+            if(end.docFp && byFp.has(end.docFp)) docId = byFp.get(end.docFp).id;
+            else if(docId && idMap.has(docId)) docId = idMap.get(docId);
+
+            if(end.sourceFp && byFp.has(end.sourceFp)) srcId = byFp.get(end.sourceFp).id;
+            else if(srcId && idMap.has(srcId)) srcId = idMap.get(srcId);
+
+            return {...end, docId, sourceDocId: srcId};
+          };
+
+          L.from = remapEnd(L.from);
+          L.to   = remapEnd(L.to);
+
+          // only accept if target docIds exist in current session
+          if(!byId.has(L.from?.docId) || !byId.has(L.to?.docId)) continue;
+
+          this.links.push(L);
+          existing.add(L.id);
+        }
+
+        this.render();
+        alert("Notes importées (fusion).");
+      }catch(err){
+        console.error(err);
+        alert("Import impossible (JSON invalide).");
+      }
+    };
+    input.click();
+  }
+
+  mergeAnnotations(a,b){
+    // shallow merge page keys, zones by id, notes by id
+    const out=structuredClone(a);
+    for(const [k,v] of Object.entries(b||{})){
+      if(!out[k]){ out[k]=structuredClone(v); continue; }
+      const az=(out[k].zones||[]);
+      const bz=(v.zones||[]);
+      const byZone=new Map(az.map(z=>[z.id,z]));
+      for(const z of bz){
+        if(!z || !z.id) continue;
+        const cur=byZone.get(z.id);
+        if(!cur){
+          az.push(structuredClone(z));
+          byZone.set(z.id, az[az.length-1]);
+        }else{
+          cur.rect = cur.rect || z.rect;
+          cur.createdAt = cur.createdAt || z.createdAt;
+          cur.notes = cur.notes || [];
+          const byNote=new Map(cur.notes.map(n=>[n.id,n]));
+          for(const n of (z.notes||[])){
+            if(!n || !n.id) continue;
+            if(!byNote.has(n.id)){
+              cur.notes.push(structuredClone(n));
+              byNote.set(n.id, cur.notes[cur.notes.length-1]);
+            }else{
+              // keep latest content by ts
+              const ex=byNote.get(n.id);
+              if((n.ts||0) > (ex.ts||0)){
+                ex.ts=n.ts; ex.text=n.text;
+              }
+            }
+          }
+        }
+      }
+      out[k].zones = az;
+    }
+    return out;
+  }
+
+  /* ===================== PDF Ops (PDF-Lib) ===================== */
+  getSelectedSorted(doc){
+    const arr=Array.from(doc.selected).filter(i=>i>=0&&i<doc.pages.length);
+    arr.sort((a,b)=>a-b);
+    return arr;
+  }
+
+  deleteSelected(){
+    const doc=this.activeDoc(); if(!doc) return;
+    const sel=this.getSelectedSorted(doc);
+    if(!sel.length){ alert("Aucune page sélectionnée."); return; }
+    for(let i=sel.length-1;i>=0;i--) doc.pages.splice(sel[i],1);
+    doc.selected.clear();
+    if(doc.filter){
+      const max=doc.pages.length;
+      doc.filter=doc.filter.map(n=>clamp(n,1,max)).filter((n,i,a)=>a.indexOf(n)===i).sort((a,b)=>a-b);
+      if(!doc.filter.length) doc.filter=null;
+    }
+    this.normalizeModeDefaults();
+    this.renderPagesList();
+    this.syncSelectionPill();
+    this.render();
+  }
+
+  async extractSelected(){
+    const doc=this.activeDoc(); if(!doc) return;
+    const sel=this.getSelectedSorted(doc);
+    if(!sel.length){ alert("Aucune page sélectionnée."); return; }
+
+    const out=await PDFLib.PDFDocument.create();
+    const srcLibById=new Map(this.docs.map(d=>[d.id, d.pdfLibDoc]));
+
+    for(const idx of sel){
+      const ref=doc.pages[idx];
+      const srcLib=srcLibById.get(ref.sourceDocId);
+      if(!srcLib){ alert("Export impossible: PDF-Lib indisponible pour un des documents source."); return; }
+      const [copied]=await out.copyPages(srcLib, [ref.sourcePageNumber-1]);
+      const rot=degreesNorm90(doc.globalRotation + ref.rotation);
+      copied.setRotation(PDFLib.degrees(rot));
+      out.addPage(copied);
+    }
+    const bytes=await out.save();
+    downloadBytes(bytes, `extract_${sanitizeFilename(doc.name)}.pdf`);
+  }
+
+  async mergeSelected(){
+    return this.extractSelected();
+  }
+
+  async exportActiveDoc(){
+    const doc=this.activeDoc(); if(!doc) return;
+    const out=await PDFLib.PDFDocument.create();
+    const srcLibById=new Map(this.docs.map(d=>[d.id, d.pdfLibDoc]));
+
+    for(const ref of doc.pages){
+      const srcLib=srcLibById.get(ref.sourceDocId);
+      if(!srcLib){ alert("Export impossible: PDF-Lib indisponible pour un des documents source."); return; }
+      const [copied]=await out.copyPages(srcLib, [ref.sourcePageNumber-1]);
+      const rot=degreesNorm90(doc.globalRotation + ref.rotation);
+      copied.setRotation(PDFLib.degrees(rot));
+      out.addPage(copied);
+    }
+    const bytes=await out.save();
+    downloadBytes(bytes, `export_${sanitizeFilename(doc.name)}.pdf`);
+  }
+
+  /* ===================== OCR ===================== */
+  async ocrPageByRef(doc, pageIndex, zoneRectNorm=null, slotScale=1.0){
+    const ref=doc.pages[pageIndex];
+    const srcDoc=this.docs.find(d=>d.id===ref.sourceDocId);
+    if(!srcDoc) throw new Error("Source doc introuvable.");
+    const page=await srcDoc.pdfjsDoc.getPage(ref.sourcePageNumber);
+    const rot=degreesNorm90(doc.globalRotation + ref.rotation);
+
+    // scale OCR: plus élevé => meilleure précision mais plus lent.
+    // garde-fou: au moins 2.0
+    const scale = Math.max(2.0, slotScale*2.0);
+
+    const viewport=page.getViewport({scale, rotation: rot});
+    const off=document.createElement("canvas");
+    off.width=Math.floor(viewport.width);
+    off.height=Math.floor(viewport.height);
+    const ctx=off.getContext("2d");
+    await page.render({canvasContext: ctx, viewport}).promise;
+
+    let img=off;
+
+    if(zoneRectNorm){
+      const sx=Math.floor(zoneRectNorm.x * viewport.width);
+      const sy=Math.floor(zoneRectNorm.y * viewport.height);
+      const sw=Math.floor(zoneRectNorm.w * viewport.width);
+      const sh=Math.floor(zoneRectNorm.h * viewport.height);
+
+      const crop=document.createElement("canvas");
+      crop.width=Math.max(1, sw);
+      crop.height=Math.max(1, sh);
+      crop.getContext("2d").drawImage(off, sx, sy, sw, sh, 0, 0, crop.width, crop.height);
+      img=crop;
+    }
+
+    const result=await Tesseract.recognize(img, "fra", {
+      logger:(m)=>{
+        if(m && m.status){
+          const pct=m.progress?` (${Math.round(m.progress*100)}%)`:"";
+          this.setOCRStatus(`${m.status}${pct}`);
+        }
+      }
+    });
+    return result.data.text || "";
+  }
+
+  async ocrDocument(){
+    const doc=this.activeDoc(); if(!doc) return;
+    this.el.ocrPanel.classList.add("active");
+    const visible=this.visiblePageIndices(doc);
+    let out="";
+    for(let i=0;i<visible.length;i++){
+      const pageIndex=visible[i];
+      this.setOCRStatus(`OCR page ${pageIndex+1} (${i+1}/${visible.length})…`);
+      const text=await this.ocrPageByRef(doc,pageIndex,null,this.globalZoom);
+      out += `\\n\\n===== Page ${pageIndex+1} =====\\n` + (text||"").trim() + "\\n";
+    }
+    this.el.ocrText.value=out.trim();
+    this.setOCRStatus("Terminé");
+  }
+
+  async ocrVisibleSlots(){
+    const doc=this.activeDoc(); if(!doc) return;
+    this.el.ocrPanel.classList.add("active");
+    const visible=this.visiblePageIndices(doc);
+    if(!visible.length) return;
+
+    const indices=[];
+    for(let s=0;s<this.slots;s++){
+      const pageIndex=visible[this.slotCursor[s]];
+      if(pageIndex!==undefined) indices.push(pageIndex);
+    }
+    const uniq=Array.from(new Set(indices));
+    let out="";
+    for(let i=0;i<uniq.length;i++){
+      const pageIndex=uniq[i];
+      this.setOCRStatus(`OCR slot page ${pageIndex+1} (${i+1}/${uniq.length})…`);
+      const text=await this.ocrPageByRef(doc,pageIndex,null,this.globalZoom);
+      out += `\\n\\n===== Page ${pageIndex+1} =====\\n` + (text||"").trim() + "\\n";
+    }
+    this.el.ocrText.value=(this.el.ocrText.value?this.el.ocrText.value+"\\n\\n":"")+out.trim();
+    this.setOCRStatus("Terminé");
+  }
+
+  async ocrSelectedPages(){
+    const doc=this.activeDoc(); if(!doc) return;
+    this.el.ocrPanel.classList.add("active");
+    const sel=this.getSelectedSorted(doc);
+    if(!sel.length){ alert("Aucune page sélectionnée."); return; }
+    let out="";
+    for(let i=0;i<sel.length;i++){
+      const pageIndex=sel[i];
+      this.setOCRStatus(`OCR sélection page ${pageIndex+1} (${i+1}/${sel.length})…`);
+      const text=await this.ocrPageByRef(doc,pageIndex,null,this.globalZoom);
+      out += `\\n\\n===== Page ${pageIndex+1} =====\\n` + (text||"").trim() + "\\n";
+    }
+    this.el.ocrText.value=(this.el.ocrText.value?this.el.ocrText.value+"\\n\\n":"")+out.trim();
+    this.setOCRStatus("Terminé");
+  }
+
+  async ocrZonesActiveSlot(){
+    const doc=this.activeDoc(); if(!doc) return;
+    this.el.ocrPanel.classList.add("active");
+
+    const visible=this.visiblePageIndices(doc);
+    if(!visible.length) return;
+
+    const s=this.activeSlot;
+    const pageIndex=visible[this.slotCursor[s]];
+    const { anno } = this.getPageAnno(doc, pageIndex);
+    const zones = anno.zones || [];
+    if(!zones.length){
+      alert("Aucune zone sur la page du slot actif. Active Zones:ON puis trace une zone.");
+      return;
+    }
+
+    const slotScale = this.globalZoom * (this.slotZooms[s] ?? 1.0);
+
+    let out="";
+    for(let i=0;i<zones.length;i++){
+      const z=zones[i];
+      this.setOCRStatus(`OCR zone ${i+1}/${zones.length} (${z.id})…`);
+      const text=await this.ocrPageByRef(doc,pageIndex,z.rect,slotScale);
+      out += `\\n\\n===== Zone ${z.id} (Page ${pageIndex+1}) =====\\n${(text||"").trim()}\\n`;
+    }
+    this.el.ocrText.value=(this.el.ocrText.value?this.el.ocrText.value+"\\n\\n":"")+out.trim();
+    this.setOCRStatus("Terminé");
+  }
+}
+
+/* ===================== Boot ===================== */
+
+/* ===================== UI v14 helpers ===================== */
+function buildHeaderMenus(){
+  const header = document.querySelector('header');
+  if(!header) return;
+
+  // Group title + sidebar button
+  const btnSidebar = document.getElementById('btnSidebar');
+  const titleNode = header.childNodes[0];
+  // Find text node with title "PDF Manager v10" etc and wrap it
+  let titleEl = header.querySelector('.appTitle');
+  if(!titleEl){ titleEl = header.querySelector('.title'); if(titleEl) titleEl.classList.add('appTitle'); }
+  if(!titleEl){
+    // first element after possible text nodes: locate by scanning
+    for(const n of Array.from(header.childNodes)){
+      if(n.nodeType === 3 && (n.textContent||'').trim()){
+        const span=document.createElement('span');
+        span.className='appTitle';
+        span.textContent=(n.textContent||'').trim();
+        n.textContent='';
+        header.insertBefore(span, header.firstChild);
+        titleEl=span;
+        break;
+      }
+    }
+  }
+
+  const left=document.createElement('div');
+  left.className='topbarLeft';
+
+  if(btnSidebar) left.appendChild(btnSidebar);
+  if(titleEl) left.appendChild(titleEl);
+
+  // Insert left at start
+  header.insertBefore(left, header.firstChild);
+
+  const menus=document.createElement('div');
+  menus.className='menus';
+  header.insertBefore(menus, header.querySelector('.grow') || null);
+
+  function makeMenu(label, ids){
+    const m=document.createElement('div');
+    m.className='menu';
+    const b=document.createElement('button');
+    b.className='menuBtn';
+    b.type='button';
+    b.textContent=label;
+
+    const panel=document.createElement('div');
+    panel.className='menuPanel';
+
+    for(const id of ids){
+      if(id==='---'){
+        const sep=document.createElement('div');
+        sep.className='menuSep';
+        panel.appendChild(sep);
+        continue;
+      }
+      const el=document.getElementById(id);
+      if(el){
+        el.style.width='100%';
+        el.style.justifyContent='flex-start';
+        panel.appendChild(el);
+      }
+    }
+
+    b.onclick=(e)=>{
+      e.stopPropagation();
+      // close others
+      document.querySelectorAll('.menu.open').forEach(x=>{ if(x!==m) x.classList.remove('open'); });
+      m.classList.toggle('open');
+    };
+
+    m.appendChild(b);
+    m.appendChild(panel);
+    menus.appendChild(m);
+  }
+
+  makeMenu('Documents', ['btnLoad','btnAddToDoc','btnSaveDoc']);
+  makeMenu('Notes', ['btnExportNotes','btnImportNotes']);
+  makeMenu('Vue', ['btnTogglePresentation','btnToggleSlotChrome']);
+  makeMenu('Preset', ['btnExportPreset','btnImportPreset']);
+
+  // close on outside click
+  document.addEventListener('click', ()=>document.querySelectorAll('.menu.open').forEach(x=>x.classList.remove('open')));
+}
+
+function buildSidebarAccordions(){
+  const sidebar=document.getElementById('sidebar');
+  if(!sidebar) return;
+
+  const nodes=Array.from(sidebar.children);
+  const out=[];
+  let i=0;
+
+  const allowMultipleOpen=true;
+  const defaultOpenTitles=new Set(['Affichage des pages (filtre)','Mode de visualisation','Zoom','Pages (document actif)','Notes (zone active)']);
+
+  while(i<nodes.length){
+    const n=nodes[i];
+    if(n.tagName==='H3'){
+      const title=n.textContent.trim();
+      const acc=document.createElement('div');
+      acc.className='acc';
+      if(defaultOpenTitles.has(title)) acc.classList.add('open');
+
+      const head=document.createElement('div');
+      head.className='accHead';
+      head.innerHTML=`<span>${title}</span><span class="accChevron">▸</span>`;
+      const body=document.createElement('div');
+      body.className='accBody';
+
+      i++;
+      while(i<nodes.length && nodes[i].tagName!=='H3'){
+        body.appendChild(nodes[i]);
+        i++;
+      }
+      head.onclick=()=>{
+        if(!allowMultipleOpen){
+          sidebar.querySelectorAll('.acc.open').forEach(a=>{ if(a!==acc) a.classList.remove('open'); });
+        }
+        acc.classList.toggle('open');
+      };
+
+      acc.appendChild(head);
+      acc.appendChild(body);
+      out.push(acc);
+      continue;
+    }
+    out.push(n);
+    i++;
+  }
+
+  sidebar.innerHTML='';
+  for(const n of out) sidebar.appendChild(n);
+}
+
+function wireSidebarOverlay(){
+  const sidebar=document.getElementById('sidebar');
+  const backdrop=document.getElementById('backdrop');
+  const btnSidebar=document.getElementById('btnSidebar');
+  if(!sidebar || !backdrop || !btnSidebar) return;
+
+  const close=()=>sidebar.classList.remove('open');
+  backdrop.onclick=close;
+
+  // keep existing toggle behavior (already bound), but ensure backdrop closes too
+  document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') close(); });
+}
+
+function addViewerZoomControl(){
+  const topbar=document.querySelector('.viewerTopbar');
+  if(!topbar) return;
+
+  const labelSpan=document.getElementById('renderZoomLabel');
+  const slider=document.getElementById('inputRenderZoom');
+  if(!slider) return;
+
+  // add a second control in topbar, synced with existing slider
+  const group=document.createElement('div');
+  group.className='zoomGroup';
+  group.innerHTML = `
+    <label>Zoom viewer: <span id="viewerZoomLabel" class="small">${labelSpan ? labelSpan.textContent : (slider.value+'%')}</span></label>
+    <input id="inputViewerZoom" type="range" min="${slider.min}" max="${slider.max}" value="${slider.value}" />
+    <button class="btn" id="btnResetViewerZoom" type="button">Reset</button>
+  `;
+  topbar.appendChild(group);
+
+  const vLabel=document.getElementById('viewerZoomLabel');
+  const vSlider=document.getElementById('inputViewerZoom');
+  const vReset=document.getElementById('btnResetViewerZoom');
+
+  const sync = ()=>{
+    if(vSlider) vSlider.value = slider.value;
+    if(vLabel) vLabel.textContent = (labelSpan ? labelSpan.textContent : (slider.value+'%'));
+  };
+
+  slider.addEventListener('input', sync);
+
+  vSlider.addEventListener('input', ()=>{
+    slider.value = vSlider.value;
+    slider.dispatchEvent(new Event('input'));
+  });
+
+  vReset.onclick=()=>{
+    slider.value = 100;
+    slider.dispatchEvent(new Event('input'));
+  };
+
+  // initial
+  sync();
+}
+
+/* ===== Global Nav + Selection helpers (v17.2) ===== */
+PDFTool.prototype.slotRowCol = function(slotIndex, cols){
+  return { row: Math.floor(slotIndex/cols), col: slotIndex%cols };
+};
+
+PDFTool.prototype.getTargetSlotIndices = function(cols){
+  const scope = this.globalScope || "all";
+  if(scope==="selected" && this.selectedSlots && this.selectedSlots.size){
+    return Array.from(this.selectedSlots).filter(i=>i>=0 && i<this.slots);
+  }
+  if(scope==="rows" && this.selectedRows && this.selectedRows.size){
+    const out=[];
+    for(let i=0;i<this.slots;i++){
+      const rc=this.slotRowCol(i, cols);
+      if(this.selectedRows.has(rc.row)) out.push(i);
+    }
+    return out.length?out:Array.from({length:this.slots},(_,i)=>i);
+  }
+  if(scope==="cols" && this.selectedCols && this.selectedCols.size){
+    const out=[];
+    for(let i=0;i<this.slots;i++){
+      const rc=this.slotRowCol(i, cols);
+      if(this.selectedCols.has(rc.col)) out.push(i);
+    }
+    return out.length?out:Array.from({length:this.slots},(_,i)=>i);
+  }
+  return Array.from({length:this.slots},(_,i)=>i);
+};
+
+PDFTool.prototype.syncGlobalNavChips = function(cols){
+  if(!this.el || !this.el.chipsRows || !this.el.chipsCols) return;
+  const rows = Math.ceil(this.slots / cols);
+  const rowsEl=this.el.chipsRows, colsEl=this.el.chipsCols;
+
+  rowsEl.innerHTML=""; colsEl.innerHTML="";
+
+  for(let r=0;r<rows;r++){
+    const d=document.createElement("div");
+    d.className="chip"+(this.selectedRows && this.selectedRows.has(r) ? " on":"");
+    d.textContent="L"+(r+1);
+    d.onclick=()=>{
+      if(!this.selectedRows) this.selectedRows=new Set();
+      if(this.selectedRows.has(r)) this.selectedRows.delete(r); else this.selectedRows.add(r);
+      this.syncGlobalNavChips(cols);
+    };
+    rowsEl.appendChild(d);
+  }
+
+  for(let c=0;c<cols;c++){
+    const d=document.createElement("div");
+    d.className="chip"+(this.selectedCols && this.selectedCols.has(c) ? " on":"");
+    d.textContent="C"+(c+1);
+    d.onclick=()=>{
+      if(!this.selectedCols) this.selectedCols=new Set();
+      if(this.selectedCols.has(c)) this.selectedCols.delete(c); else this.selectedCols.add(c);
+      this.syncGlobalNavChips(cols);
+    };
+    colsEl.appendChild(d);
+  }
+
+  const scope=this.globalScope || "all";
+  rowsEl.style.display = (scope==="rows") ? "flex" : "none";
+  colsEl.style.display = (scope==="cols") ? "flex" : "none";
+};
+
+PDFTool.prototype.applyGlobalOffset = function(delta){
+  const doc=this.activeDoc && this.activeDoc();
+  if(!doc) return;
+  const visible=this.visiblePageIndices(doc);
+  const maxCursor=Math.max(0, visible.length-1);
+  const grid=this.computeGrid ? this.computeGrid() : {cols:1};
+  const cols=grid.cols||1;
+  const targets=this.getTargetSlotIndices(cols);
+  targets.forEach(s=>{
+    const cur=(this.slotCursor && this.slotCursor[s] != null) ? this.slotCursor[s] : 0;
+    this.slotCursor[s]=clamp(cur+delta, 0, maxCursor);
+  });
+  this.render && this.render();
+};
+
+PDFTool.prototype.applyGlobalAbsolute = function(pageNumber){
+  const doc=this.activeDoc && this.activeDoc();
+  if(!doc) return;
+  const visible=this.visiblePageIndices(doc);
+  const absIndex=clamp((pageNumber|0)-1, 0, doc.pages.length-1);
+  const cursor=visible.indexOf(absIndex);
+  if(cursor<0) return;
+  const grid=this.computeGrid ? this.computeGrid() : {cols:1};
+  const cols=grid.cols||1;
+  const targets=this.getTargetSlotIndices(cols);
+  targets.forEach(s=>{ this.slotCursor[s]=cursor; });
+  this.render && this.render();
+};
+
+PDFTool.prototype.applySelectedPagesToSlots = function(){
+  const doc=this.activeDoc && this.activeDoc();
+  if(!doc || !doc.selected || !doc.selected.size) return;
+
+  const visible=this.visiblePageIndices(doc);
+  const cols=this._computeColsSafe ? this._computeColsSafe() : 1;
+  const targets=(this.getTargetSlotIndices ? this.getTargetSlotIndices(cols) : Array.from({length:this.slots},(_,i)=>i)) || [];
+
+  const scope=(this.globalScope||"all");
+  if(scope==="selected" && (!this.selectedSlots || !this.selectedSlots.size)){
+    this.toast && this.toast("Aucun slot sélectionné : utilise Slots → Tout / +N pour sélectionner.");
+    return;
+  }
+  if(!targets.length) return;
+
+  const L = doc.pages.length;
+  const sel = Array.from(doc.selected);
+  const norm = sel.map(v=>{
+    const n=(v|0);
+    if(n>=0 && n<L) return n;        // 0-based index
+    if(n>=1 && n<=L) return n-1;     // 1-based page number
+    return null;
+  }).filter(v=>v!==null);
+
+  const cursors=[];
+  for(const pageIndex of norm){
+    const c=visible.indexOf(pageIndex);
+    if(c>=0) cursors.push(c);
+  }
+  cursors.sort((a,b)=>a-b);
+  if(!cursors.length) return;
+
+  if(doc._applyPagesOffset==null) doc._applyPagesOffset=0;
+  const start = doc._applyPagesOffset % cursors.length;
+
+  (this.ensureSlotCursorsDefensive ? this.ensureSlotCursorsDefensive() : (this.ensureSlotCursors && this.ensureSlotCursors()));
+
+  for(let i=0;i<targets.length;i++){
+    const s=targets[i];
+    const c=cursors[(start+i)%cursors.length];
+    this.slotCursor[s]=c;
+  }
+
+  doc._applyPagesOffset=(start+targets.length)%cursors.length;
+
+  this.render && this.render();
+};
+
+
+/* ===== Toast helper (v17.6) ===== */
+PDFTool.prototype.toast = function(msg){
+  try{
+    const el=document.createElement("div");
+    el.style.position="fixed";
+    el.style.left="50%";
+    el.style.bottom="20px";
+    el.style.transform="translateX(-50%)";
+    el.style.background="rgba(0,0,0,.85)";
+    el.style.color="white";
+    el.style.border="1px solid rgba(255,255,255,.15)";
+    el.style.padding="10px 12px";
+    el.style.borderRadius="12px";
+    el.style.zIndex="9999";
+    el.style.fontSize="12px";
+    el.textContent=msg;
+    document.body.appendChild(el);
+    setTimeout(()=>{ el.style.opacity="0"; el.style.transition="opacity .25s"; }, 1400);
+    setTimeout(()=>{ el.remove(); }, 1750);
+  }catch(e){ console.warn(msg); }
+};
+
+
+/* ===== Slot selection helpers (v17.8) ===== */
+PDFTool.prototype._selNVal = function(){
+  const n = parseInt(this.el?.inputSelN?.value || "1", 10);
+  return Math.max(1, isFinite(n) ? n : 1);
+};
+PDFTool.prototype.selectAllSlots = function(){
+  if(!this.selectedSlots) this.selectedSlots = new Set();
+  this.selectedSlots.clear();
+  for(let i=0;i<this.slots;i++) this.selectedSlots.add(i);
+  this.render && this.render();
+};
+PDFTool.prototype.deselectAllSlots = function(){
+  if(!this.selectedSlots) this.selectedSlots = new Set();
+  this.selectedSlots.clear();
+  this.render && this.render();
+};
+PDFTool.prototype.selectNSlotsFromActive = function(){
+  if(!this.selectedSlots) this.selectedSlots = new Set();
+  const n = this._selNVal();
+  const start = (this.activeSlot ?? 0);
+  for(let k=0;k<n;k++){
+    const s = (start + k) % this.slots;
+    this.selectedSlots.add(s);
+  }
+  this.render && this.render();
+};
+PDFTool.prototype.deselectNSlotsFromActive = function(){
+  if(!this.selectedSlots) this.selectedSlots = new Set();
+  const n = this._selNVal();
+  const start = (this.activeSlot ?? 0);
+  for(let k=0;k<n;k++){
+    const s = (start + k) % this.slots;
+    this.selectedSlots.delete(s);
+  }
+  this.render && this.render();
+};
+
+
+/* ===== Defensive helpers (v17.9) ===== */
+PDFTool.prototype.ensureSlotCursorsDefensive = function(){
+  if(!this.slotCursor) this.slotCursor=[];
+  if(!Array.isArray(this.slotCursor)) this.slotCursor = [];
+  while(this.slotCursor.length < this.slots) this.slotCursor.push(0);
+};
+PDFTool.prototype._computeColsSafe = function(){
+  try{
+    if(typeof this.computeGrid === "function"){
+      // support both signatures: computeGrid(slots, mode) OR computeGrid()
+      const g = (this.computeGrid.length >= 2) ? this.computeGrid(this.slots, this.mode) : this.computeGrid();
+      const cols = g && g.cols ? g.cols : 1;
+      return Math.max(1, cols|0);
+    }
+  }catch(e){}
+  return 1;
+};
+
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  buildHeaderMenus();
+  buildSidebarAccordions();
+  wireSidebarOverlay();
+  addViewerZoomControl();
+});
+
+const app=new PDFTool();
+
+/* ===== UI bindings fix (v17.9) ===== */
+function bindSlotSelectionButtons(tool){
+  if(!tool || !tool.el) return;
+
+  // Ensure selectedSlots exists
+  if(!tool.selectedSlots) tool.selectedSlots = new Set();
+
+  const byId = (id)=>document.getElementById(id);
+
+  const btnAll = byId("btnSelAllSlots");
+  const btnNone = byId("btnDeselAllSlots");
+  const btnPlusN = byId("btnSelN");
+  const btnMinusN = byId("btnDeselN");
+  const inputN = byId("inputSelN");
+
+  const nVal = ()=>{
+    const n=parseInt((inputN && inputN.value) ? inputN.value : "1", 10);
+    return Math.max(1, isFinite(n)?n:1);
+  };
+
+  btnAll && (btnAll.onclick=()=>{ tool.selectAllSlots ? tool.selectAllSlots() : (tool.selectedSlots=new Set(Array.from({length:tool.slots},(_,i)=>i)), tool.render()); });
+  btnNone && (btnNone.onclick=()=>{ tool.deselectAllSlots ? tool.deselectAllSlots() : (tool.selectedSlots.clear(), tool.render()); });
+  btnPlusN && (btnPlusN.onclick=()=>{ tool.selectNSlotsFromActive ? tool.selectNSlotsFromActive() : (function(){ const n=nVal(); const start=tool.activeSlot||0; for(let k=0;k<n;k++) tool.selectedSlots.add((start+k)%tool.slots); tool.render(); })(); });
+  btnMinusN && (btnMinusN.onclick=()=>{ tool.deselectNSlotsFromActive ? tool.deselectNSlotsFromActive() : (function(){ const n=nVal(); const start=tool.activeSlot||0; for(let k=0;k<n;k++) tool.selectedSlots.delete((start+k)%tool.slots); tool.render(); })(); });
+
+  // If scope is "selected" and user clicks apply without selection, toast already handled in applySelectedPagesToSlots.
+}
+
+document.addEventListener("DOMContentLoaded", ()=>{
+  // Try to locate the running instance
+  const tool = window.tool || window.pdfTool || window.app || null;
+  if(tool) bindSlotSelectionButtons(tool);
+
+  // If created later, hook a microtask + interval for short time
+  let tries=0;
+  const iv=setInterval(()=>{
+    const t = window.tool || window.pdfTool || window.app || null;
+    if(t){ bindSlotSelectionButtons(t); clearInterval(iv); }
+    tries++; if(tries>50) clearInterval(iv);
+  }, 50);
+});
+
+</script>
+</body>
+</html>
