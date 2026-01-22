@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8" />
+    <title>PDF Manager v10 – PDF.js + Tesseract.js + Notes/Links</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- Tesseract.js -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- PDF-Lib (édition/export) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <button class="presentBack" id="btnExitPresentation" title="Retour / quitter le mode présentation">← Retour</button>
+    <div class="app">
+        <header>
+            <div class="title">PDF Manager v10</div>
+            <button class="btn" id="btnSidebar">☰</button>
+            <button class="btn primary" id="btnLoad">Charger PDFs</button>
+            <button class="btn" id="btnAddToDoc" title="Ajouter un PDF au document actif (append)">Ajouter au
+                doc</button>
+            <button class="btn info" id="btnSaveDoc"
+                title="Exporter le document actif (édition requiert PDF-Lib ok)">Exporter doc</button>
+
+            <button class="btn" id="btnExportNotes"
+                title="Exporter toutes les notes/zones/liens (session) en JSON">Exporter notes JSON</button>
+            <button class="btn" id="btnImportNotes" title="Charger un JSON de notes (fusion)">Importer notes
+                JSON</button>
+
+            <button class="btn" id="btnTogglePresentation" title="Mode présentation (masque les panneaux)">Mode
+                présentation</button>
+            <button class="btn" id="btnToggleSlotChrome" title="Afficher/masquer les en-têtes et pieds des slots">Slots
+                UI</button>
+            <button class="btn" id="btnExportPreset"
+                title="Exporter le preset de configuration (UI/layout) en JSON">Exporter preset</button>
+            <button class="btn" id="btnImportPreset"
+                title="Importer un preset de configuration (UI/layout) depuis JSON">Importer preset</button>
+            <div class="grow"></div>
+            <span class="pill" id="statusPill">0 document</span>
+            <span class="pill" id="selPill">0 sélection</span>
+        </header>
+
+        <div class="tabs" id="tabs"></div>
+
+        <div class="main">
+            <aside class="sidebar" id="sidebar">
+                <h3>Affichage des pages (filtre)</h3>
+                <div class="field">
+                    <label>Exemples: <span class="small">1-3</span> / <span class="small">1-4,6-8</span> / <span
+                            class="small">10</span></label>
+                    <input id="inputRanges" placeholder="1-4,6-8,10" />
+                </div>
+                <div class="row">
+                    <button class="btn" id="btnApplyRanges">Appliquer</button>
+                    <button class="btn" id="btnClearRanges">Tout afficher</button>
+                </div>
+
+                <h3>Mode de visualisation</h3>
+                <div class="field">
+                    <label>Mode</label>
+                    <select id="selectMode">
+                        <option value="simple">Simple (1 slot)</option>
+                        <option value="horizontal">Horizontal (slots → lignes)</option>
+                        <option value="vertical">Vertical (slots → colonnes)</option>
+                    </select>
+                </div>
+
+                <div class="row">
+                    <div class="field">
+                        <label>Slots</label>
+                        <div class="row">
+                            <button class="btn" id="btnSlotsMinus">-</button>
+                            <input id="inputSlots" type="number" min="1" value="1" />
+                            <button class="btn" id="btnSlotsPlus">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="field">
+                        <label>Lignes (mode horizontal)</label>
+                        <input id="inputRows" type="number" min="1" value="1" />
+                    </div>
+                    <div class="field">
+                        <label>Colonnes (mode vertical)</label>
+                        <input id="inputCols" type="number" min="1" value="1" />
+                    </div>
+                </div>
+
+                <h3>Taille des slots (manuel)</h3>
+                <div class="row">
+                    <div class="field">
+                        <label>Largeur défaut (px)</label>
+                        <input id="inputSlotWDefault" type="number" min="200" value="595" />
+                    </div>
+                    <div class="field">
+                        <label>Hauteur défaut (px)</label>
+                        <input id="inputSlotHDefault" type="number" min="200" value="842" />
+                    </div>
+                </div>
+
+                <h3>Zoom</h3>
+
+                <h3>Zoom d'affichage (slots)</h3>
+                <div class="field">
+                    <label>Render: <span id="renderZoomLabel" class="small">100%</span></label>
+                    <input id="inputRenderZoom" type="range" min="50" max="140" value="100" />
+                </div>
+                <div class="row">
+                    <button class="btn" id="btnResetRenderZoom">Reset Render</button>
+                    <button class="btn" id="btnTogglePresentation2">Mode présentation</button>
+                    <button class="btn" id="btnToggleSlotChrome2">Slots UI</button>
+                </div>
+
+                <div class="field">
+                    <label>Global: <span id="zoomLabel" class="small">100%</span></label>
+                    <input id="inputZoom" type="range" min="50" max="220" value="100" />
+                </div>
+                <div class="row">
+                    <button class="btn" id="btnResetGlobalZoom">Reset Zoom</button>
+                    <button class="btn" id="btnResetGlobalRot">Reset Rotation</button>
+                </div>
+                <div class="hint">
+                    Le zoom global multiplie le zoom individuel de chaque slot.
+                </div>
+
+                <h3>Navigation</h3>
+                <div class="hint">
+                    Clique un slot → il devient actif (contour bleu).<br />
+                    Clique une page dans la liste → la page est envoyée vers le slot actif.<br />
+                    Clic droit sur une page dans la liste → sélection/désélection.
+                </div>
+
+                <h3>Pages (document actif)</h3>
+                <div class="row" style="gap:8px;margin-bottom:8px">
+                    <button class="btn" id="btnSelectAllPages">Tout sélectionner</button>
+                    <button class="btn" id="btnDeselectAllPages">Tout désélectionner</button>
+                    <button class="btn info" id="btnApplyPagesToSlots"
+                        title="Appliquer les pages sélectionnées sur les slots (1 page par slot). Si sélection > nb slots, chaque clic applique le batch suivant.">Appliquer
+                        sélection → slots</button>
+                </div>
+                <div class="pagesList" id="pagesList"></div>
+
+                <h3>Opérations pages</h3>
+                <div class="row">
+                    <button class="btn danger" id="btnDeleteSel">Supprimer sélection</button>
+                    <button class="btn info" id="btnExtractSel">Extraire sélection</button>
+                </div>
+                <div class="row">
+                    <button class="btn primary" id="btnMergeSel">Fusionner sélection</button>
+                    <button class="btn" id="btnClearSel">Vider sélection</button>
+                </div>
+
+                <div class="sep"></div>
+
+                <h3>OCR</h3>
+                <div class="row">
+                    <button class="btn" id="btnOCRPanel">Ouvrir OCR</button>
+                    <button class="btn warn" id="btnZoneToggle">Zones: OFF</button>
+                </div>
+                <div class="hint">
+                    OCR: doc / slots visibles / sélection / zone(s) (slot actif).
+                </div>
+
+                <div class="sep"></div>
+
+                <h3>Notes & liens</h3>
+                <div class="hint">
+                    Les notes sont versionnées par zone (plusieurs entrées).<br />
+                    Les liens peuvent pointer vers une note précise (noteId) d'une zone.
+                </div>
+                <div class="row" style="gap:8px">
+                    <button class="btn" id="btnOpenNotePicker">Explorer toutes les notes</button>
+                    <button class="btn" id="btnOpenLinkPicker">Créer un lien (depuis note active)</button>
+                </div>
+            </aside>
+            <div class="backdrop" id="backdrop"></div>
+
+            <section class="content">
+                <div class="viewerTopbar">
+                    <div class="modeBtns">
+                        <button class="modeBtn" data-mode="simple" id="modeSimple">Simple</button>
+                        <button class="modeBtn" data-mode="horizontal" id="modeHoriz">Horizontal</button>
+                        <button class="modeBtn" data-mode="vertical" id="modeVert">Vertical</button>
+                    </div>
+
+                    <div class="globalNav" id="globalNavBar" title="Navigation globale">
+                        <span class="pillMini">Page globale</span>
+                        <button class="btn" id="btnGPrevJump" title="Saut arrière (par nb de slots ciblés)">⏮</button>
+                        <button class="btn" id="btnGPrev" title="Page précédente">◀</button>
+                        <input id="inputGStep" type="number" min="1" value="1" title="Pas (nombre de pages)"
+                            style="width:70px" />
+                        <button class="btn" id="btnGNext" title="Page suivante">▶</button>
+                        <button class="btn" id="btnGNextJump" title="Saut avant (par nb de slots ciblés)">⏭</button>
+
+                        <span class="pillMini">Aller à</span>
+                        <input id="inputGPage" type="number" min="1" value="1" title="Numéro de page (absolu, 1-based)"
+                            style="width:88px" />
+                        <button class="btn info" id="btnGApply" title="Appliquer la page à la cible">Appliquer</button>
+
+                        <select id="selectGScope" title="Cible" style="min-width:190px">
+                            <option value="all">Tous les slots</option>
+                            <option value="selected">Slots sélectionnés</option>
+                            <option value="rows">Lignes sélectionnées</option>
+                            <option value="cols">Colonnes sélectionnées</option>
+                        </select>
+
+                        <div class="chips" id="chipsRows" aria-label="Lignes"></div>
+                        <div class="chips" id="chipsCols" aria-label="Colonnes"></div>
+
+                        <span class="pillMini">Slots</span>
+                        <button class="btn" id="btnSelAllSlots" title="Sélectionner tous les slots">Tout</button>
+                        <button class="btn" id="btnDeselAllSlots" title="Désélectionner tous les slots">Aucun</button>
+                        <span class="muted" style="font-size:12px;opacity:.75">N</span>
+                        <input id="inputSelN" type="number" min="1" value="1" title="Nombre de slots"
+                            style="width:64px" />
+                        <button class="btn" id="btnSelN"
+                            title="Sélectionner N slots (à partir du slot actif)">+N</button>
+                        <button class="btn" id="btnDeselN"
+                            title="Désélectionner N slots (à partir du slot actif)">−N</button>
+
+                        <button class="btn" id="btnGClear" title="Vider les sélections">Clear</button>
+                    </div>
+
+                    <div class="grow"></div>
+                    <span class="pill" id="docInfoPill">—</span>
+                </div>
+
+                <div class="viewer" id="viewer">
+                    <div class="empty" id="emptyState">Aucun PDF chargé. Cliquez sur "Charger PDFs".</div>
+                </div>
+
+                <div class="ocrPanel" id="ocrPanel">
+                    <div class="ocrHead">
+                        <div class="left">
+                            <div class="t">OCR</div>
+                            <div class="s" id="ocrStatus">Prêt</div>
+                        </div>
+                        <div class="row" style="max-width:220px;gap:6px">
+                            <button class="btn" id="btnOCRClose">Fermer</button>
+                            <button class="btn" id="btnOCRCopy">Copier</button>
+                        </div>
+                    </div>
+                    <div class="ocrBody">
+                        <textarea id="ocrText" placeholder="Résultat OCR…"></textarea>
+                    </div>
+                    <div class="ocrFoot">
+                        <button class="btn" id="btnOCRDoc">OCR doc</button>
+                        <button class="btn" id="btnOCRVisible">OCR slots visibles</button>
+                        <button class="btn" id="btnOCRSelected">OCR sélection</button>
+                        <button class="btn warn" id="btnOCRZone">OCR zones (slot actif)</button>
+                        <button class="btn" id="btnOCRClear">Effacer</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Modal: pick notes / pick target for link -->
+        <div class="modal" id="modalPicker" aria-hidden="true">
+            <div class="backdrop" data-act="close"></div>
+            <div class="modalCard">
+                <div class="modalHead">
+                    <div class="t" id="modalTitle">Notes</div>
+                    <input id="modalSearch" placeholder="Rechercher (doc, page, zone, note, texte)…" />
+                    <button class="btn" data-act="close">Fermer</button>
+                </div>
+                <div class="modalBody">
+                    <div class="notePick" id="modalList"></div>
+                </div>
+                <div class="modalFoot">
+                    <button class="btn" data-act="close">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
